@@ -1,0 +1,37 @@
+{
+  "name": "yellow-server",
+  "version": "0.0.1",
+  "description": "Back end server for yellow note collection",
+  "main": "src/index.js",
+  "scripts": {
+    "lint": "eslint --fix src/*.js",
+    "start": "node src/index.js",
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jonathanlb/yellow.git"
+  },
+  "author": "Jonathan Bredin",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/jonathanlb/yellow/issues"
+  },
+  "homepage": "https://github.com/jonathanlb/yellow#readme",
+  "dependencies": {
+    "debug": "^3.1.0",
+    "express": "^4.16.3",
+    "pg-promise": "^8.4.6",
+    "sqlite3": "^4.0.2"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-core": "^6.26.3",
+    "babel-jest": "^23.4.2",
+    "babel-preset-env": "^1.7.0",
+    "eslint": "^5.4.0",
+    "jest": "^23.5.0",
+    "jest-cli": "^23.5.0",
+    "regenerator-runtime": "^0.12.1"
+  }
+}

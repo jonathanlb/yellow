@@ -1,0 +1,32 @@
+{
+  "name": "yellow-client",
+  "version": "0.0.1",
+  "description": "Front end for yellow note collection",
+  "main": "index.js",
+  "scripts": {
+    "build": "node copyStaticAssets.js && webpack",
+    "lint": "eslint --fix src/*.js",
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jonathanlb/yellow.git"
+  },
+  "author": "Jonathan Bredin",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/jonathanlb/yellow/issues"
+  },
+  "homepage": "https://github.com/jonathanlb/yellow#readme",
+  "devDependencies": {
+    "eslint": "^5.4.0",
+    "eslint-config-airbnb": "^17.1.0",
+    "eslint-plugin-import": "^2.14.0",
+    "eslint-plugin-jsx-a11y": "^6.1.1",
+    "eslint-plugin-react": "^7.11.1",
+    "jest-cli": "^23.5.0",
+    "shelljs": "^0.8.2",
+    "webpack": "^4.17.0",
+    "webpack-cli": "^3.1.0"
+  }
+}

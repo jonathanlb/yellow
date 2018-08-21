@@ -1,0 +1,13 @@
+{
+ "root": true,
+ "env": {
+  "es6": true,
+  "node": true,
+  "browser": false
+ },
+ "extends": [ "airbnb", "plugin:import/warnings" ],
+ "parserOptions": {
+  "ecmaVersion": 6,
+  "sourceType": "module"
+ }
+}
