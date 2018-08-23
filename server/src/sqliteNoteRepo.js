@@ -38,7 +38,12 @@ module.exports = class SqliteNoteRepo {
   async checkSecret(secret, user) {
     const query = `SELECT secret FROM users WHERE ${user} = rowid`;
     return this.db.allAsync(query)
-      .then(result => result.secret === SqliteNoteRepo.escapeQuotes(secret));
+      .then((result) => {
+        const ok = result.length > 0
+          && result[0].secret === SqliteNoteRepo.escapeQuotes(secret);
+        debug('checkSecret', ok);
+        return ok;
+      });
   }
 
   close() {
@@ -81,7 +86,10 @@ module.exports = class SqliteNoteRepo {
     return this.db.allAsync(query)
       .then((x) => {
         debug('GET', x);
-        return x[0].content;
+        if (x.length > 0) {
+          return x[0].content;
+        }
+        return undefined;
       });
   }
 
@@ -109,6 +117,9 @@ module.exports = class SqliteNoteRepo {
    */
   async removeNote(noteId, user) {
     debug('removeNote', noteId, user);
+    const query = `DELETE FROM notes WHERE rowid = ${noteId} AND user = ${user}`;
+    debug(query);
+    return this.db.allAsync(query);
   }
 
   /**
@@ -118,12 +129,15 @@ module.exports = class SqliteNoteRepo {
     debug('searchNote', searchTerms, user);
   }
 
+  /**
+   * Set up the tables
+   */
   async setup() {
-    const createNotes = 'CREATE TABLE notes(user INT, content TEXT)';
+    const createNotes = 'CREATE TABLE IF NOT EXISTS notes(user INT, content TEXT)';
     debug('setup', createNotes);
     return this.db.runAsync(createNotes)
       .then(() => {
-        const createUsers = 'CREATE TABLE users(userName TEXT, secret TEXT)';
+        const createUsers = 'CREATE TABLE IF NOT EXISTS users(userName TEXT, secret TEXT)';
         debug('setup', createUsers);
         return this.db.runAsync(createUsers);
       });

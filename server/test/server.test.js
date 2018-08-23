@@ -1,6 +1,6 @@
 const express = require('express');
 const request = require('supertest');
-const Repo = require('./inMemoryRepo');
+const Repo = require('./inMemoryNoteRepo');
 const Server = require('../src/server');
 
 function createServer(app) {
@@ -21,6 +21,18 @@ describe('Test routing instantiation', () => {
 });
 
 describe('Test note routing', () => {
+  test('Checks permissions', () => {
+    const app = express();
+    return createServer(app).
+      then(server => {
+        server.repo.checkSecret = () => Promise.resolve(false);
+      }).
+      then(() => request(app).get(`/note/create/sEcr3t/noobe/foobar`)).
+      then(response => {
+        expect(response.statusCode).toBe(403);
+      });
+  });
+
   test('Handles note create', () => {
     const app = express();
     const content = encodeURIComponent('<h1>My Day</h1><p>Some note</p>');

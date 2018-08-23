@@ -12,7 +12,7 @@ module.exports = class Server {
     return this.repo.checkSecret(secret, user)
       .then((ok) => {
         if (!ok) {
-          res.status(404).send('Not found');
+          res.status(403).send('Unauthorized');
         } else {
           f();
         }
