@@ -8,7 +8,7 @@ const pg = require('pg-promise');
  */
 module.exports = class PgRepo {
   constructor() {
-	}
+  }
 
   /**
    * Check the secret against the user id.
@@ -17,8 +17,8 @@ module.exports = class PgRepo {
     return true;
   }
 
-	close() {
-	}
+  close() {
+  }
 
   /**
    * Insert a new note into the repository returning a promise to the note
@@ -48,4 +48,4 @@ module.exports = class PgRepo {
   async search(searchTerms, user) {
     debug('search', searchTerms, user);
   }
-}
+};

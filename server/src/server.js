@@ -26,21 +26,34 @@ module.exports = class Server {
   /**
    * Wire the routes.
    */
-  setup() {
+  async setup() {
     this.router.use(express.static('public'));
-    this.setupCreate();
-    this.setupDelete();
-    this.setupGet();
     this.setupIndex();
-    this.setupSearch();
+    this.setupNoteCreate();
+    this.setupNoteDelete();
+    this.setupNoteGet();
+    this.setupNoteSearch();
+    this.setupUserCreate();
+    this.setupUserGet();
+
+    return this.repo.setup()
+      .then(() => this);
   }
 
-  setupCreate() {
+  setupIndex() {
+    this.router.get('/', (req, res, next) => {
+      debug('get index');
+      res.status(200).send('Hello');
+      return Promise.resolve(next);
+    });
+  }
+
+  setupNoteCreate() {
     this.router.get(
-      '/create/:secret/:user/:content',
+      '/note/create/:secret/:user/:content',
       (req, res) => this.checkSecret(req.params.secret, req.params.user, res, () => {
         const content = Server.parseRequest(req.params, req.params.content);
-        return this.repo.create(content, req.params.user)
+        return this.repo.createNote(content, req.params.user)
           .then((id) => {
             debug('created', id);
             res.status(200).send(id.toString());
@@ -49,12 +62,12 @@ module.exports = class Server {
     );
   }
 
-  setupDelete() {
+  setupNoteDelete() {
     this.router.get(
-      '/delete/:secret/:user/:noteId',
+      '/note/delete/:secret/:user/:noteId',
       (req, res) => this.checkSecret(req.params.secret, req.params.user, res, () => {
         debug('delete', req.params.noteId);
-        return this.repo.remove(req.params.noteId, req.params.user)
+        return this.repo.removeNote(req.params.noteId, req.params.user)
           .then((result) => {
             debug('deleted', result);
             res.status(200).send(result.toString());
@@ -63,12 +76,12 @@ module.exports = class Server {
     );
   }
 
-  setupGet() {
+  setupNoteGet() {
     this.router.get(
-      '/get/:secret/:user/:noteId',
+      '/note/get/:secret/:user/:noteId',
       (req, res) => this.checkSecret(req.params.secret, req.params.user, res, () => {
         const id = req.params.noteId;
-        return this.repo.get(id, req.params.user)
+        return this.repo.getNote(id, req.params.user)
           .then((content) => {
             debug('retrieved', id, content);
             if (content) {
@@ -81,23 +94,49 @@ module.exports = class Server {
     );
   }
 
-  setupIndex() {
-    this.router.get('/', (req, res, next) => {
-      debug('get index');
-      res.status(200).send('Hello');
-      return Promise.resolve(next);
-    });
-  }
-
-  setupSearch() {
+  setupNoteSearch() {
     this.router.get(
-      '/search/:secret/:user/:searchTerm',
+      '/note/search/:secret/:user/:searchTerm',
       (req, res) => this.checkSecret(req.params.secret, req.params.user, res, () => {
         const searchTerm = Server.parseRequest(req.params, req.params.searchTerm);
-        return this.repo.search(searchTerm, req.params.user)
+        return this.repo.searchNote(searchTerm, req.params.user)
           .then((results) => {
             debug('found', searchTerm, results);
             res.status(200).send(JSON.stringify(results));
+          });
+      }),
+    );
+  }
+
+  setupUserCreate() {
+    this.router.get(
+      '/user/create/:secret/:userName',
+      (req, res) => {
+        const userName = Server.parseRequest(req.params, req.params.userName);
+        debug('user create', userName);
+        return this.repo.createUser(userName, req.params.secret)
+          .then((id) => {
+            debug('user created', id);
+            res.status(200).send(id.toString());
+          });
+      },
+    );
+  }
+
+  setupUserGet() {
+    this.router.get(
+      '/user/get/:secret/:user/:userName',
+      (req, res) => this.checkSecret(req.params.secret, req.params.user, res, () => {
+        const userName = Server.parseRequest(req.params, req.params.userName);
+        debug('user get', req.params.user, userName);
+        return this.repo.getUser(userName)
+          .then((id) => {
+            debug('retrieved user', id);
+            if (id >= 0) {
+              res.status(200).send(id.toString());
+            } else {
+              res.status(404).send(`Not found: ${userName}`);
+            }
           });
       }),
     );
