@@ -114,6 +114,7 @@ module.exports = class SqliteNoteRepo {
 
   /**
    * Delete note content, returning a promise of success.
+   * Only the author should be able to remove the note.
    */
   async removeNote(noteId, user) {
     debug('removeNote', noteId, user);
@@ -124,9 +125,16 @@ module.exports = class SqliteNoteRepo {
 
   /**
    * Return a promise to an array of note ids.
+   * @param searchTerms the substring completing the SQLite3 search query
+   *  "SELECT rowid FROM notes WHERE ..."
+   * TODO: check permissions.
    */
   async searchNote(searchTerms, user) {
     debug('searchNote', searchTerms, user);
+    const query = `SELECT rowid FROM notes WHERE ${searchTerms}`;
+    debug(query);
+    return this.db.allAsync(query)
+      .then(result => result.map(entry => entry.rowid));
   }
 
   /**

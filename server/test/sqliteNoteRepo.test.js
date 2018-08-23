@@ -71,6 +71,23 @@ describe('Test SqLite3 note repository', () => {
       });
   });
 
+  test('Searches notes', () => {
+    const repo = new Repo();
+    const userId = 1;
+
+    return repo.setup().
+      then(() => repo.createNote('foo', userId)).
+      then(() => repo.createNote('bar', userId)).
+      then(() => repo.createNote('baz', userId)).
+      then(() => repo.searchNote('content LIKE \'%b%\'', userId)).
+      then(result => expect(result).toEqual([2,3])).
+      then(() => repo.close()).
+      catch(e => {
+        repo.close();
+        throw e;
+      });
+  });
+
   test('Uses secrets', () => {
     const repo = new Repo();
     const userName = 'Jonathan';

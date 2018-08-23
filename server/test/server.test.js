@@ -103,7 +103,7 @@ describe('Test note routing', () => {
       then(response => request(app).get(`/note/search/sEcr3t/noobe/${search}`)).
       then(response => {
         expect(response.statusCode).toBe(200);
-        expect(response.text).toEqual(JSON.stringify([rawContent]));
+        expect(response.text).toEqual(JSON.stringify([0]));
       });
   });
 

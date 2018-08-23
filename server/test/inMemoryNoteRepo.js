@@ -85,11 +85,17 @@ module.exports = class InMemoryRepo {
 
   /**
    * Return a promise to an array of note ids.
+   * For testing instance, just return the first.
    */
   async searchNote(searchTerms, user) {
     debug('search', searchTerms, user);
-    return this.content.filter(x =>
+    const idx = this.content.findIndex(x =>
         x.toString().includes(searchTerms));
+    if (idx < 0) {
+      return [];
+    } else {
+      return [idx];
+    }
   }
 
   async setup() {
