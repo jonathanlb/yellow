@@ -1,7 +1,5 @@
-function component() {
-  const element = document.createElement('div');
-  element.innerHTML += 'Yellow notes';
-  return element;
-}
+const App = require('./app');
 
-document.body.appendChild(component());
+const app = new App('main-app');
+app.setup()
+  .then(() => app.render());

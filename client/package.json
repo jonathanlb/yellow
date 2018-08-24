@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "node copyStaticAssets.js && webpack",
-    "lint": "eslint --fix src/*.js",
+    "lint": "eslint --fix src/*.js test/*.js views/*.js",
     "test": "jest"
   },
   "repository": {
@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/jonathanlb/yellow#readme",
   "devDependencies": {
+    "babel-eslint": "^8.2.6",
     "eslint": "^5.4.0",
     "eslint-config-airbnb": "^17.1.0",
     "eslint-plugin-import": "^2.14.0",
@@ -28,5 +29,9 @@
     "shelljs": "^0.8.2",
     "webpack": "^4.17.0",
     "webpack-cli": "^3.1.0"
+  },
+  "dependencies": {
+    "debug": "^3.1.0",
+    "yo-yo": "^1.4.1"
   }
 }
