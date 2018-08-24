@@ -134,13 +134,41 @@ describe('Test user routing', () => {
       });
   });
 
+  test('Handles user bootstrap get success', () => {
+    const app = express();
+    const user = encodeURIComponent('The "Real" Twit');
+    const secret = 'sEcr3t';
+
+    return createServer(app).
+      then(() => request(app).get(`/user/create/${secret}/${user}`)).
+      then(response => request(app).get(`/user/get/${secret}/-1/${user}`)).
+      then(response => {
+        expect(response.statusCode).toBe(200);
+        expect(response.text).toEqual('0');
+      });
+  });
+
+  test('Handles user bootstrap get failure', () => {
+    const app = express();
+    const user = encodeURIComponent('The "Real" Twit');
+    const secret = 'sEcr3t';
+
+    return createServer(app).
+      then(server =>
+        server.repo.checkSecret = () => Promise.resolve(false)).
+      then(() => request(app).get(`/user/get/${secret}/-1/${user}`)).
+      then(response =>
+        expect(response.statusCode).toBe(403));
+  });
+
   test('Handles user get', () => {
     const app = express();
     const user = encodeURIComponent('The "Real" Twit');
+    const secret = 'sEcr3t';
 
     return createServer(app).
-      then(() => request(app).get(`/user/create/sEcr3t/${user}`)).
-      then(response => request(app).get(`/user/get/sEcr3t/0/${user}`)).
+      then(() => request(app).get(`/user/create/${secret}/${user}`)).
+      then(response => request(app).get(`/user/get/${secret}/0/${user}`)).
       then(response => {
         expect(response.statusCode).toBe(200);
         expect(response.text).toEqual('0');

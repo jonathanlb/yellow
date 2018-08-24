@@ -93,6 +93,9 @@ module.exports = class SqliteNoteRepo {
       });
   }
 
+  /**
+   * Return a promise returning the user id from the user name.
+   */
   async getUser(userName) {
     debug('getUser', userName);
     const query = `SELECT ROWID FROM users WHERE userName = '${SqliteNoteRepo.escapeQuotes(userName)}'`;
