@@ -36,16 +36,26 @@ module.exports = class App {
     return fetch(cmd)
       .then((response) => {
         if (response.status === 200) {
-          debug('lookupUserId', response.body, userName);
-          const userId = parseInt(response.body, 10);
-          if (Number.isFinite(userId)) {
-            this.userId = userId;
-            this.userName = userName;
-            this.secret = secret;
-            return this.render(searchView);
+          const setId = (idText) => {
+            debug('lookupUserId', idText, userName);
+            const userId = parseInt(idText, 10);
+            if (Number.isFinite(userId)) {
+              this.userId = userId;
+              this.userName = userName;
+              this.secret = secret;
+              return this.render(searchView);
+            }
+            errors('lookupUserId parse error', response.body);
+            return this.render(loginView);
+          };
+
+          // jest-fetch-mock doesn't accurately mock response?
+          // it uses a string body, while Chrome comes back with a reader.
+          if (typeof response.body === 'string') {
+            return setId(response.body);
           }
-          errors('lookupUserId parse error', response.body);
-          return this.render(loginView);
+          return response.text()
+            .then(id => setId(id));
         }
         errors('Cannot look up user name', userName);
         return this.render(loginView);
@@ -62,7 +72,7 @@ module.exports = class App {
           </main>
         </div>
       `;
-      const element = document.querySelector(`#${this.contentSelector}`);
+      const element = document.getElementById(this.contentSelector);
       yo.update(element, innerHTML);
     };
 

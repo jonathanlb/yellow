@@ -5,8 +5,8 @@ module.exports = (app) => {
   const userNameField = 'userNameField';
 
   function setUserNameAndPassword() {
-    const userName = document.querySelector(`#${userNameField}`).value.trim();
-    const password = document.querySelector(`#${passwordField}`).value.trim();
+    const userName = document.getElementById(userNameField).value.trim();
+    const password = document.getElementById(passwordField).value.trim();
     if (userName && password) {
       app.setUserNameAndPassword(userName, password);
     }

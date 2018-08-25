@@ -8,7 +8,7 @@ module.exports = class Server {
     this.repo = repo;
 
     ['checkSecret', 'checkUserLookupSecret']
-      .forEach(m => this[m] = this[m].bind(this));
+      .forEach((m) => { this[m] = this[m].bind(this); });
   }
 
   /**
@@ -23,6 +23,7 @@ module.exports = class Server {
   checkSecret(params, res, f) {
     const secret = Server.parseRequest(params, params.secret);
     const userId = Server.parseRequest(params, params.user);
+    Server.setCors(res);
     return this.repo.checkSecret(secret, userId)
       .then((ok) => {
         if (!ok) {
@@ -47,6 +48,7 @@ module.exports = class Server {
     const userName = Server.parseRequest(params, params.userName);
     let userId = -1;
     debug('checkUserLookupSecret', userName);
+    Server.setCors(res);
 
     return this.repo.getUser(userName)
       .then((id) => {
@@ -188,7 +190,7 @@ module.exports = class Server {
       '/user/get/:secret/:user/:userName',
       (req, res) => {
         const userName = Server.parseRequest(req.params, req.params.userName);
-        const userId = parseInt(req.params.user);
+        const userId = parseInt(req.params.user, 10);
 
         const authf = userId > 0
           ? this.checkSecret
@@ -208,5 +210,16 @@ module.exports = class Server {
         });
       },
     );
+  }
+
+  /**
+   * Allow cross-origin requests for development use.
+   * TODO: install switch on production/development; lock down to localhost.
+   *
+   * @param res The Express response in wiring.
+   */
+  static setCors(res) {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Headers', 'X-Requested-With');
   }
 };
