@@ -1,0 +1,33 @@
+button {
+	font-family: monospace;
+	font-weight: bold;
+}
+
+h1 {
+	background: yellow; /* weird stripe */
+	font-family: cursive;
+	font-style: italic;
+}
+
+header {
+	line-height: 10px;
+	margin: 10px;
+	margin-bottom: 15px;
+}
+
+label {
+	font-family: sans-serif;
+	font-weight: bold;
+}
+
+.navbarItem {
+	background: yellow;
+	font-family: cursive;
+	font-style: italic;
+	margin: 10px;
+	padding: 5px;
+}
+
+.navbarItem:hover {
+	background: palegreen;
+}
