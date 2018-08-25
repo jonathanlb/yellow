@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "node copyStaticAssets.js && webpack",
+    "coverage": "jest --coverage",
     "lint": "eslint --fix src/*.js test/*.js views/*.js",
     "test": "jest"
   },
@@ -26,6 +27,7 @@
     "eslint-plugin-jsx-a11y": "^6.1.1",
     "eslint-plugin-react": "^7.11.1",
     "jest-cli": "^23.5.0",
+    "jest-fetch-mock": "^1.6.5",
     "shelljs": "^0.8.2",
     "webpack": "^4.17.0",
     "webpack-cli": "^3.1.0"

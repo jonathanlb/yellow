@@ -1,4 +1,5 @@
 const debug = require('debug')('app');
+const errors = require('debug')('app:error');
 const yo = require('yo-yo');
 
 const renderFatalError = require('../views/fatalError');
@@ -12,10 +13,12 @@ const cardsView = 1;
 const searchView = 2;
 
 module.exports = class App {
-  constructor(contentSelector) {
-    this.contentSelector = contentSelector;
+  constructor(opts) {
+    this.contentSelector = opts.contentSelector || 'main-app';
     this.secret = undefined;
+    this.serverPrefix = opts.serverPrefix || 'localhost:3000/';
     this.userName = undefined;
+    this.userId = -1;
     this.view = App.getDefaultView();
   }
 
@@ -26,7 +29,31 @@ module.exports = class App {
     return loginView;
   }
 
-  render() {
+  async lookupUserId() {
+    const userName = this.userName;
+    const secret = this.secret;
+    const cmd = `${this.serverPrefix}user/get/${secret}/-1/${userName}`;
+    debug('lookupUserId', cmd);
+    return fetch(cmd)
+      .then((response) => {
+        if (response.status === 200) {
+          debug('lookupUserId', response.body, userName);
+          const userId = parseInt(response.body);
+          if (Number.isFinite(userId)) {
+            this.userId = userId;
+            this.userName = userName;
+            this.secret = secret;
+            return this.render(searchView);
+          }
+          errors('lookupUserId parse error', response.body);
+          return this.render(loginView);
+        }
+        errors('Cannot look up user name', userName);
+        return this.render(loginView);
+      });
+  }
+
+  render(viewOpt) {
     const setContent = (content) => {
       const innerHTML = yo`
         <div id="${this.contentSelector}">
@@ -39,6 +66,10 @@ module.exports = class App {
       const element = document.querySelector(`#${this.contentSelector}`);
       yo.update(element, innerHTML);
     };
+
+    if (viewOpt !== undefined) {
+      this.view = viewOpt;
+    }
 
     debug('render view', this.view);
     switch (this.view) {
@@ -60,16 +91,15 @@ module.exports = class App {
     return [];
   }
 
-  setUserNameAndPassword(userName, password) {
+  async setUserNameAndPassword(userName, password) {
     debug('setUserNameAndPassword', userName);
-    this.userName = userName;
-    this.secret = password; // XXX avoid storing password
+
     if (userName && password) {
-      this.view = searchView;
-    } else {
-    	this.view = App.getDefaultView();
+      this.userName = userName;
+      this.secret = encodeURIComponent(password); // XXX avoid storing password
+      return this.lookupUserId();
     }
-    this.render();
+    return this.render(App.getDefaultView());
   }
 
   async setup() {
