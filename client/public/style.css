@@ -1,0 +1,67 @@
+button {
+	font-family: monospace;
+	font-weight: bold;
+}
+
+h1 {
+	background: yellow; /* weird stripe */
+	font-family: cursive;
+	font-style: italic;
+}
+
+header {
+	line-height: 10px;
+	margin: 10px;
+	margin-bottom: 15px;
+}
+
+label {
+	font-family: sans-serif;
+	font-weight: bold;
+}
+
+.cardAuthor {
+	float: left;
+	font-family: cursive;
+	font-style: italic;
+	padding: 2px;
+}
+
+.cardContainer {
+	/* background: yellow; */
+	border-color: yellow;
+	border-style: solid;
+	border-width: 5px;
+	position: absolute;
+	z-index: 9;
+}
+
+.cardContent {
+
+}
+
+.cardDate {
+	float: right;
+	font-family: sans-serif;
+	font-style: italic;
+	padding: 2px;
+}
+
+.cardHeader {
+	background: palegreen;
+	cursor: move;
+	overflow: auto;
+	z-index: 10;
+}
+
+.navbarItem {
+	background: yellow;
+	font-family: cursive;
+	font-style: italic;
+	margin: 10px;
+	padding: 5px;
+}
+
+.navbarItem:hover {
+	background: palegreen;
+}
