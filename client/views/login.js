@@ -20,11 +20,11 @@ module.exports = (app) => {
       <label for="${passwordField}" >Password:</label>
       <input type="password" id="${passwordField}"
         onkeyup=${(e) => {
-    if (e.key === 'Enter') {
-      setUserNameAndPassword();
-    }
-  }
-} />
+          if (e.key === 'Enter') {
+            setUserNameAndPassword();
+          }
+        }
+      } />
       <br/>
       <button onclick=${setUserNameAndPassword} >OK</button>
     </div>
