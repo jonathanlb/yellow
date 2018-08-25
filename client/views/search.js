@@ -10,11 +10,11 @@ module.exports = (app) => {
       <label for="searchField">Search:</label>
       <input type="text" id="searchField" 
         onkeyup=${(e) => {
-          if (e.key === 'Enter') {
-            doSearch();
-          }
-        }
-      } />
+    if (e.key === 'Enter') {
+      doSearch();
+    }
+  }
+} />
       <button onclick=${doSearch} >OK</button>
     </div>
   `;

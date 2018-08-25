@@ -16,16 +16,16 @@ module.exports = (app) => {
     <div>
       <label for="${userNameField}" >User name:</label>
       <input type="text" id="${userNameField}" />
-			<br/>
+      <br/>
       <label for="${passwordField}" >Password:</label>
       <input type="password" id="${passwordField}"
         onkeyup=${(e) => {
-          if (e.key === 'Enter') {
-            setUserNameAndPassword();
-          }
-        }
-      } />
-			<br/>
+    if (e.key === 'Enter') {
+      setUserNameAndPassword();
+    }
+  }
+} />
+      <br/>
       <button onclick=${setUserNameAndPassword} >OK</button>
     </div>
   `;

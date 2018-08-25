@@ -30,15 +30,14 @@ module.exports = class App {
   }
 
   async lookupUserId() {
-    const userName = this.userName;
-    const secret = this.secret;
+    const { userName, secret } = this;
     const cmd = `${this.serverPrefix}user/get/${secret}/-1/${userName}`;
     debug('lookupUserId', cmd);
     return fetch(cmd)
       .then((response) => {
         if (response.status === 200) {
           debug('lookupUserId', response.body, userName);
-          const userId = parseInt(response.body);
+          const userId = parseInt(response.body, 10);
           if (Number.isFinite(userId)) {
             this.userId = userId;
             this.userName = userName;
