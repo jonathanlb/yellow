@@ -16,6 +16,7 @@ module.exports = (app) => {
     <div>
       <label for="${userNameField}" >User name:</label>
       <input type="text" id="${userNameField}" />
+			<br/>
       <label for="${passwordField}" >Password:</label>
       <input type="password" id="${passwordField}"
         onkeyup=${(e) => {
@@ -24,6 +25,7 @@ module.exports = (app) => {
           }
         }
       } />
+			<br/>
       <button onclick=${setUserNameAndPassword} >OK</button>
     </div>
   `;

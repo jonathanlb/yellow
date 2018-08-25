@@ -20,6 +20,40 @@ label {
 	font-weight: bold;
 }
 
+.cardAuthor {
+	float: left;
+	font-family: cursive;
+	font-style: italic;
+	padding: 2px;
+}
+
+.cardContainer {
+	/* background: yellow; */
+	border-color: yellow;
+	border-style: solid;
+	border-width: 5px;
+	position: absolute;
+	z-index: 9;
+}
+
+.cardContent {
+
+}
+
+.cardDate {
+	float: right;
+	font-family: sans-serif;
+	font-style: italic;
+	padding: 2px;
+}
+
+.cardHeader {
+	background: palegreen;
+	cursor: move;
+	overflow: auto;
+	z-index: 10;
+}
+
 .navbarItem {
 	background: yellow;
 	font-family: cursive;
