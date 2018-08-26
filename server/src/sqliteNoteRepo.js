@@ -57,7 +57,9 @@ module.exports = class SqliteNoteRepo {
   async createNote(content, user) {
     debug('createNote', content, user);
     const escapedContent = SqliteNoteRepo.escapeQuotes(content);
-    const query = `INSERT INTO notes(content, user) values ('${escapedContent}', ${user})`;
+    const epochS = Math.round((new Date()).getTime() / 1000);
+    const query =
+      `INSERT INTO notes(author, content, created) values (${user}, '${escapedContent}', ${epochS})`;
     debug(query);
     return this.db.runAsync(query)
       .then(() => this.lastId());
@@ -81,13 +83,14 @@ module.exports = class SqliteNoteRepo {
    */
   async getNote(noteId, user) {
     debug('getNote', noteId, user);
-    const query = `SELECT content FROM notes WHERE ROWID = ${noteId}`;
+    const query =
+      `SELECT author, content, created, ROWID as id FROM notes WHERE ROWID = ${noteId}`;
     debug(query);
     return this.db.allAsync(query)
       .then((x) => {
         debug('GET', x);
         if (x.length > 0) {
-          return x[0].content;
+          return x[0];
         }
         return undefined;
       });
@@ -121,7 +124,8 @@ module.exports = class SqliteNoteRepo {
    */
   async removeNote(noteId, user) {
     debug('removeNote', noteId, user);
-    const query = `DELETE FROM notes WHERE rowid = ${noteId} AND user = ${user}`;
+    const query =
+      `DELETE FROM notes WHERE rowid = ${noteId} AND author = ${user}`;
     debug(query);
     return this.db.allAsync(query);
   }
@@ -144,11 +148,13 @@ module.exports = class SqliteNoteRepo {
    * Set up the tables
    */
   async setup() {
-    const createNotes = 'CREATE TABLE IF NOT EXISTS notes(user INT, content TEXT)';
+    const createNotes =
+      'CREATE TABLE IF NOT EXISTS notes(author INT, content TEXT, created INT)';
     debug('setup', createNotes);
     return this.db.runAsync(createNotes)
       .then(() => {
-        const createUsers = 'CREATE TABLE IF NOT EXISTS users(userName TEXT, secret TEXT)';
+        const createUsers =
+          'CREATE TABLE IF NOT EXISTS users(userName TEXT, secret TEXT)';
         debug('setup', createUsers);
         return this.db.runAsync(createUsers);
       });

@@ -59,10 +59,21 @@ module.exports = class InMemoryRepo {
 
   /**
    * Retrieve a promise of note content.
+   * Only the content field is valid.
    */
   async getNote(noteId, user) {
     debug('get note', noteId, user);
-    return this.content[noteId];
+    const content = this.content[noteId];
+    if (content !== undefined) {
+      return {
+        author: user,
+        content: this.content[noteId],
+        created: Math.round(new Date().getTime()/1000),
+        id: noteId
+      };
+    } else {
+      return undefined;
+    }
   }
 
   /**

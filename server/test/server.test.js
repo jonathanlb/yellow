@@ -79,7 +79,8 @@ describe('Test note routing', () => {
       then(response => request(app).get(`/note/get/sEcr3t/noobe/0`)).
       then(response => {
         expect(response.statusCode).toBe(200);
-        expect(response.text).toEqual(rawContent);
+        const note = JSON.parse(response.text);
+        expect(note.content).toEqual(rawContent);
       });
   });
 

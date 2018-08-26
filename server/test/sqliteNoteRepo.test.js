@@ -22,7 +22,12 @@ describe('Test SqLite3 note repository', () => {
     return repo.setup().
       then(() => repo.createNote(content, user)).
       then(id => repo.getNote(id, user)).
-      then(result => expect(result).toEqual(content)).
+      then(note => {
+        expect(note.author).toBe(user);
+        expect(note.id).toBeDefined();
+        expect(note.created).toBeDefined();
+        expect(note.content).toEqual(content);
+      }).
       then(() => repo.close()).
       catch(e => {
         repo.close();
