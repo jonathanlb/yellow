@@ -1,7 +1,8 @@
 const yo = require('yo-yo');
 
-module.exports = () => yo`
+module.exports = (app) => yo`
   <div>
-    XXX
+    <h2>Error</h2>
+    <p>${app.lastError}</p>
   </div>
 `;

@@ -1,11 +1,11 @@
 const yo = require('yo-yo');
 
-module.exports = () => yo`
+module.exports = (app) => yo`
     <header>
       <h1>Yellow Notes</h1>
       <br/>
-      <span class="navbarItem" >Post</span>
-      <span class="navbarItem" >Search</span>
-      <span class="navbarItem" >Logout</span>
+      <span class="navbarItem" onclick=${ () => app.render(4) } >Post</span>
+      <span class="navbarItem" onclick=${ () => app.render(2) } >Search</span>
+      <span class="navbarItem" onclick=${app.logout} >Logout</span>
     </header>
   `;

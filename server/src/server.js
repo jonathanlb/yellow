@@ -154,6 +154,9 @@ module.exports = class Server {
           .then((results) => {
             debug('found', searchTerm, results);
             res.status(200).send(JSON.stringify(results));
+          }).catch((error) => {
+            errors('noteSearch', error);
+            res.status(500).send(error.message);
           });
       }),
     );

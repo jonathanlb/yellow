@@ -3,7 +3,7 @@ const login = require('../views/login');
 describe('Login component', () => {
   test('renders login component', () => {
     const app = {
-      setUserNameAndPassword: (u, p) => undefined
+      setUserNameAndPassword: () => undefined,
     };
     const elt = login(app);
     expect(elt.innerHTML.includes('User name:'), 'Contains username label')
@@ -22,7 +22,7 @@ describe('Login component', () => {
         clicked = true;
         password = p;
         userName = u;
-      }
+      },
     };
 
     document.createElement('body');
@@ -45,11 +45,11 @@ describe('Login component', () => {
     expect(userName).toEqual('Me');
 
     userNameField.value = 'MeToo';
-    passwordField.onkeyup({key: ' '});
+    passwordField.onkeyup({ key: ' ' });
     expect(userName).toEqual('Me');
     expect(password).toEqual('secret');
 
-    passwordField.onkeyup({key: 'Enter'});
+    passwordField.onkeyup({ key: 'Enter' });
     expect(password).toEqual('secret');
     expect(userName).toEqual('MeToo');
   });
