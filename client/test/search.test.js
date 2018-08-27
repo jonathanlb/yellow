@@ -7,19 +7,24 @@ describe('Search component', () => {
   });
 
   test('wires OK button', () => {
-    let clicked = false;
+    let query = 'author=1';
+    let queryToApp = ''
     const app = {
-      doSearch: () => { clicked = true; },
+      doSearch: (q) => { queryToApp = q; },
     };
 
     document.createElement('body');
     const elt = search(app);
     document.body.appendChild(elt);
 
+    const field = Array.from(elt.childNodes)
+      .find(e => e.id === 'searchField');
+    field.value = query;
+
     const button = Array.from(elt.childNodes)
       .find(e => e.textContent === 'OK');
     button.onclick();
-    expect(clicked).toBe(true);
+    expect(queryToApp).toEqual(query);
   });
 
   test('wires search field enter', () => {

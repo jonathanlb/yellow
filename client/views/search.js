@@ -5,7 +5,7 @@ module.exports = (app) => {
 
   function doSearch() {
     const query = document.getElementById(searchField).value.trim();
-    app.doSearch();
+    app.doSearch(query);
   }
 
   return yo`
