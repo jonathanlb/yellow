@@ -14,7 +14,8 @@ module.exports = class InMemoryRepo {
       'createNote',
       'createUser',
       'getNote',
-      'getUser',
+      'getUserId',
+      'getUserName',
       'removeNote',
       'searchNote',
       'setup'
@@ -79,9 +80,17 @@ module.exports = class InMemoryRepo {
   /**
    * Retrieve a promise of the user id matching the user name.
    */
-  async getUser(userName) {
-    debug('get user', userName);
+  async getUserId(userName) {
+    debug('get user id', userName);
     return this.users.findIndex(x => x == userName);
+  }
+
+  /**
+   * Retrieve a promise of the user name matching the user id.
+   */
+  async getUserName(userId) {
+    debug('get user name', userId);
+    return this.users[userId];
   }
 
   /**

@@ -50,7 +50,7 @@ module.exports = class Server {
     debug('checkUserLookupSecret', userName);
     Server.setCors(res);
 
-    return this.repo.getUser(userName)
+    return this.repo.getUserId(userName)
       .then((id) => {
         userId = id;
         debug('checkUserLookupSecret', userId, userName);
@@ -85,7 +85,7 @@ module.exports = class Server {
     this.setupNoteGet();
     this.setupNoteSearch();
     this.setupUserCreate();
-    this.setupUserGet();
+    this.setupUserIdGet();
 
     return this.repo.setup()
       .then(() => this);
@@ -136,7 +136,12 @@ module.exports = class Server {
           .then((content) => {
             debug('retrieved', id, content);
             if (content) {
-              res.status(200).send(content);
+              // replace content.author with a user name.
+              return this.repo.getUserName(content.author)
+                .then(userName => {
+                  content.author = userName;
+                  res.status(200).send(content);
+                });
             } else {
               res.status(404).send(`Not found: ${id}`);
             }
@@ -188,7 +193,7 @@ module.exports = class Server {
    * Normal mode: password/secret and userid must match to return user id for
    *  included user name.
    */
-  setupUserGet() {
+  setupUserIdGet() {
     this.router.get(
       '/user/get/:secret/:user/:userName',
       (req, res) => {
@@ -201,7 +206,7 @@ module.exports = class Server {
 
         authf(req.params, res, () => {
           debug('user get', req.params.user, userName);
-          return this.repo.getUser(userName)
+          return this.repo.getUserId(userName)
             .then((id) => {
               debug('retrieved user', id);
               if (id >= 0) {

@@ -97,14 +97,28 @@ module.exports = class SqliteNoteRepo {
   /**
    * Return a promise returning the user id from the user name.
    */
-  async getUser(userName) {
-    debug('getUser', userName);
+  async getUserId(userName) {
+    debug('getUserId', userName);
     const query = `SELECT ROWID FROM users WHERE userName = '${SqliteNoteRepo.escapeQuotes(userName)}'`;
     debug(query);
     return this.db.allAsync(query)
       .then((x) => {
         debug('GET', x);
         return x[0].rowid;
+      });
+  }
+
+  /**
+   * Return a promise to the user name.
+   */
+  async getUserName(userId) {
+    debug('getUserName', userId);
+    const query = `SELECT userName FROM users WHERE ROWID = ${userId}`;
+    debug(query);
+    return this.db.allAsync(query)
+      .then((x) => {
+        debug('GET', x);
+        return x[0].userName;
       });
   }
 

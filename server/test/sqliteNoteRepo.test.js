@@ -44,8 +44,10 @@ describe('Test SqLite3 note repository', () => {
     return repo.setup().
       then(() => repo.createUser(userName, secret)).
       then(id => userId = id).
-      then(() => repo.getUser(userName)).
+      then(() => repo.getUserId(userName)).
       then(result => expect(result).toEqual(userId)).
+      then(() => repo.getUserName(userId)).
+      then(result => expect(result).toEqual(userName)).
       then(() => repo.close()).
       catch(e => {
         repo.close();

@@ -7,8 +7,8 @@ describe('Search component', () => {
   });
 
   test('wires OK button', () => {
-    let query = 'author=1';
-    let queryToApp = ''
+    const query = 'author=1';
+    let queryToApp = '';
     const app = {
       doSearch: (q) => { queryToApp = q; },
     };

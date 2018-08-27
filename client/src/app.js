@@ -20,11 +20,11 @@ module.exports = class App {
     this.lastError = undefined;
     this.secret = undefined;
     this.serverPrefix = opts.serverPrefix || 'localhost:3000/';
-    this.userName = undefined;
     this.userId = -1;
+    this.userName = undefined;
     this.view = App.getDefaultView();
 
-    ['doSearch', 'loadCard', 'logout', 'lookupUserId', 'render',
+    ['doSearch', 'loadCard', 'logout', 'lookupBootstrapUserId', 'render',
       'setUserNameAndPassword']
       .forEach((m) => { this[m] = this[m].bind(this); });
   }
@@ -77,16 +77,16 @@ module.exports = class App {
     return this.render(loginView);
   }
 
-  async lookupUserId() {
+  async lookupBootstrapUserId() {
     const { userName, secret } = this;
     const cmd = `${this.serverPrefix}user/get/${secret}/-1/${userName}`;
-    debug('lookupUserId', userName);
+    debug('lookupBootstrapUserId', userName);
     return fetch(cmd)
       .then((response) => {
         if (response.status === 200) {
           return response.text()
             .then((idText) => {
-              debug('lookupUserId', idText, userName);
+              debug('lookupBootstrapUserId', idText, userName);
               const userId = parseInt(idText, 10);
               if (Number.isFinite(userId)) {
                 this.userId = userId;
@@ -94,7 +94,7 @@ module.exports = class App {
                 this.secret = secret;
                 return this.render(searchView);
               }
-              errors('lookupUserId parse error', response.body);
+              errors('lookupBootstrapUserId parse error', response.body);
               return this.render(loginView);
             });
         }
@@ -141,7 +141,7 @@ module.exports = class App {
     if (userName && password) {
       this.userName = userName;
       this.secret = encodeURIComponent(password); // XXX avoid storing password
-      return this.lookupUserId();
+      return this.lookupBootstrapUserId();
     }
     return this.render(App.getDefaultView());
   }
