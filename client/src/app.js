@@ -15,7 +15,7 @@ const postView = 4;
 
 module.exports = class App {
   constructor(opts) {
-    this.cards = [];
+    this.discardNotes();
     this.contentSelector = opts.contentSelector || 'main-app';
     this.lastError = undefined;
     this.secret = undefined;
@@ -34,6 +34,13 @@ module.exports = class App {
    */
   static getDefaultView() {
     return loginView;
+  }
+
+  /**
+   * Drop references to cards, without rendering.
+   */
+  discardNotes() {
+    this.cards = [];
   }
 
   async doSearch(searchQuery) {
@@ -74,6 +81,7 @@ module.exports = class App {
     this.userId = -1;
     this.userName = undefined;
     this.secret = undefined;
+    this.discardNotes();
     return this.render(loginView);
   }
 

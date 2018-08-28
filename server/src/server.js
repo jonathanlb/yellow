@@ -71,6 +71,8 @@ module.exports = class Server {
   }
 
   static parseRequest(params, entry) {
+    // do we need this method?  express already decodes request parameters.
+    debug('parseRequest', entry);
     return decodeURIComponent(entry);
   }
 
@@ -154,10 +156,9 @@ module.exports = class Server {
     this.router.get(
       '/note/search/:secret/:user/:searchTerm',
       (req, res) => this.checkSecret(req.params, res, () => {
-        const searchTerm = Server.parseRequest(req.params, req.params.searchTerm);
-        return this.repo.searchNote(searchTerm, req.params.user)
+        return this.repo.searchNote(req.params.searchTerm, req.params.user)
           .then((results) => {
-            debug('found', searchTerm, results);
+            debug('found', req.params.searchTerm, results);
             res.status(200).send(JSON.stringify(results));
           }).catch((error) => {
             errors('noteSearch', error);
