@@ -2,21 +2,15 @@ const debug = require('debug')('app');
 const errors = require('debug')('app:error');
 const yo = require('yo-yo');
 
-const renderCard = require('../views/card');
+const renderCards = require('../views/cards');
 const renderFatalError = require('../views/fatalError');
 const renderHeader = require('../views/header');
 const renderLogin = require('../views/login');
+const renderPost = require('../views/post');
 const renderSearch = require('../views/search');
+const Views = require('../views/views');
 
 module.exports = class App {
-  static get loginView() { return 0; }
-
-  static get searchView() { return 2; }
-
-  static get errorView() { return 3; }
-
-  static get postView() { return 4; }
-
   constructor(opts) {
     this.discardNotes();
     this.contentSelector = opts.contentSelector || 'main-app';
@@ -27,8 +21,8 @@ module.exports = class App {
     this.userName = undefined;
     this.view = App.getDefaultView();
 
-    ['doSearch', 'loadCard', 'logout', 'lookupBootstrapUserId', 'render',
-      'setUserNameAndPassword']
+    ['createNote', 'doSearch', 'loadCard', 'logout', 'lookupBootstrapUserId',
+      'render', 'setUserNameAndPassword']
       .forEach((m) => { this[m] = this[m].bind(this); });
   }
 
@@ -36,14 +30,29 @@ module.exports = class App {
    * Inspect the environment to determine which view to show on start.
    */
   static getDefaultView() {
-    return App.loginView;
+    return Views.login;
+  }
+
+  async createNote(content) {
+    const escapedContent = encodeURIComponent(content);
+    const cmd = `${this.serverPrefix}note/create/${this.secret}/${this.userId}/${escapedContent}`;
+    return fetch(cmd)
+      .then((response) => {
+        if (response.status === 200) {
+          return response.text()
+            .then(id => this.loadCard(parseInt(id, 10)))
+            .then(() => this.render(Views.view));
+        }
+        this.lastError = `Cannot create note: ${response.status}`;
+        return this.render(Views.error);
+      });
   }
 
   /**
    * Drop references to cards, without rendering.
    */
   discardNotes() {
-    this.cards = [];
+    this.cards = {};
   }
 
   async doSearch(searchQuery) {
@@ -53,17 +62,23 @@ module.exports = class App {
       .then((response) => {
         if (response.status === 200) {
           // map result ignored aside from unit test count....
+          let cardsResult = [];
           return response.json()
-            .then(ids => ids.map(this.loadCard));
+            .then(ids => ids.map(this.loadCard))
+            .then((cards) => {
+              cardsResult = cards;
+              return this.render();
+            })
+            .then(() => cardsResult);
         }
         errors('doSearch', response);
-        this.lastError = response.status;
-        return this.render(App.errorView);
+        this.lastError = `Cannot search: ${response.status}`;
+        return this.render(Views.error);
       })
       .catch((error) => {
         errors('Cannot perform search', searchQuery, error);
         this.lastError = error.message;
-        return this.render(App.errorView);
+        return this.render(Views.error);
       });
   }
 
@@ -74,8 +89,8 @@ module.exports = class App {
       .then(response => response.json())
       .then((cardInfo) => {
         debug('loadedCard', cardInfo);
-        this.cards.push(cardInfo);
-        return this.render(); // separate out?
+        this.cards[cardInfo.id] = cardInfo;
+        return cardInfo;
       })
       .catch(error => errors('cannot load card', id, error));
   }
@@ -85,7 +100,7 @@ module.exports = class App {
     this.userName = undefined;
     this.secret = undefined;
     this.discardNotes();
-    return this.render(App.loginView);
+    return this.render(Views.login);
   }
 
   async lookupBootstrapUserId() {
@@ -103,14 +118,14 @@ module.exports = class App {
                 this.userId = userId;
                 this.userName = userName;
                 this.secret = secret;
-                return this.render(App.searchView);
+                return this.render(Views.search);
               }
               errors('lookupBootstrapUserId parse error', response.body);
-              return this.render(App.loginView);
+              return this.render(Views.login);
             });
         }
         errors('Cannot look up user name', userName);
-        return this.render(App.loginView);
+        return this.render(Views.login);
       });
   }
 
@@ -121,7 +136,7 @@ module.exports = class App {
           ${renderHeader(this)}
           <main>
             ${content}
-            ${this.cards.map(renderCard)}
+            ${renderCards(Object.values(this.cards))}
           </main>
         </div>
       `;
@@ -129,17 +144,23 @@ module.exports = class App {
       yo.update(element, innerHTML);
     };
 
+    debug('render view', viewOpt, this.view);
     if (viewOpt !== undefined) {
       this.view = viewOpt;
     }
 
-    debug('render view', this.view);
     switch (this.view) {
-      case App.loginView:
+      case Views.login:
         setContent(renderLogin(this));
         break;
-      case App.searchView:
+      case Views.view:
+        setContent('');
+        break;
+      case Views.search:
         setContent(renderSearch(this));
+        break;
+      case Views.post:
+        setContent(renderPost(this));
         break;
       default:
         setContent(renderFatalError(this));

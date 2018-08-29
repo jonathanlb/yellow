@@ -1,5 +1,6 @@
 global.fetch = require('jest-fetch-mock');
 const App = require('../src/app');
+const Views = require('../views/views');
 
 const selector = 'main-app';
 // Set up the document and return the App options appropriate for it.
@@ -23,6 +24,28 @@ describe('Application framework', () => {
     fetch.resetMocks();
   });
 
+  test('Creates cards', () => {
+    const content = 'Hello, World!';
+    global.fetch.mockResponseOnce('29');
+    const card = {
+      author: 'Jonathan',
+      content,
+      created: 1,
+      id: 29,
+    };
+    global.fetch.mockResponseOnce(JSON.stringify(card));
+
+    const app = new App(setUpDocument());
+    return app.setup()
+      .then(() => app.render(Views.post))
+      .then(() => app.createNote(content))
+      .then(() => {
+        const appContent = document.getElementById(selector).innerHTML;
+        expect(appContent.includes(content), `looking for note in\n${appContent}`)
+          .toBe(true);
+      });
+  });
+
   test('Initializes', () => {
     const app = new App(setUpDocument());
     return app.setup()
@@ -33,7 +56,6 @@ describe('Application framework', () => {
         expect(content.includes('Password:')).toBe(true);
       });
   });
-
 
   test('Loads cards', () => {
     const userId = 19;
@@ -55,6 +77,7 @@ describe('Application framework', () => {
         app.secret = secret;
         return app.loadCard(cardId);
       })
+      .then(() => app.render(Views.view))
       .then(() => {
         expect(global.fetch.mock.calls.length).toBe(1);
         expect(global.fetch.mock.calls[0][0])
@@ -71,9 +94,9 @@ describe('Application framework', () => {
 
     const app = new App(setUpDocument());
     return app.setup()
-      .then(() => expect(app.view).toEqual(App.loginView))
+      .then(() => expect(app.view).toEqual(Views.login))
       .then(() => app.setUserNameAndPassword('Jonathan', 's3cr3t'))
-      .then(() => expect(app.view).toEqual(App.loginView));
+      .then(() => expect(app.view).toEqual(Views.login));
   });
 
   test('Looks up password and sets view on success', () => {
@@ -81,9 +104,9 @@ describe('Application framework', () => {
 
     const app = new App(setUpDocument());
     return app.setup()
-      .then(() => expect(app.view).toEqual(App.loginView))
+      .then(() => expect(app.view).toEqual(Views.login))
       .then(() => app.setUserNameAndPassword('Jonathan', 's3cr3t'))
-      .then(() => expect(app.view).toEqual(App.searchView));
+      .then(() => expect(app.view).toEqual(Views.search));
   });
 
   test('Resets user name and password on logout', () => {

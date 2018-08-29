@@ -1,8 +1,5 @@
 const header = require('../views/header');
-
-// ??? placing App before header prevents static properties from being used
-// in header?
-const App = require('../src/app');
+const Views = require('../views/views');
 
 describe('Header component', () => {
   test('renders', () => {
@@ -10,6 +7,23 @@ describe('Header component', () => {
     expect(elt.innerHTML.includes('Post')).toBe(true);
     expect(elt.innerHTML.includes('Search')).toBe(true);
     expect(elt.innerHTML.includes('Logout')).toBe(true);
+  });
+
+  test('clears', () => {
+    let clicked = false;
+    const app = {
+      discardNotes: () => undefined,
+      render: () => { clicked = true; },
+    };
+
+    document.createElement('body');
+    const elt = header(app);
+    document.body.appendChild(elt);
+
+    const span = Array.from(elt.childNodes)
+      .find(e => e.textContent === 'Unclutter');
+    span.onclick();
+    expect(clicked).toBe(true);
   });
 
   test('posts', () => {
@@ -25,7 +39,7 @@ describe('Header component', () => {
     const span = Array.from(elt.childNodes)
       .find(e => e.textContent === 'Post');
     span.onclick();
-    expect(view).toBe(App.postView);
+    expect(view).toBe(Views.post);
   });
 
   test('searches', () => {
@@ -41,7 +55,7 @@ describe('Header component', () => {
     const span = Array.from(elt.childNodes)
       .find(e => e.textContent === 'Search');
     span.onclick();
-    expect(view).toBe(App.searchView);
+    expect(view).toBe(Views.search);
   });
 
   test('logs out', () => {

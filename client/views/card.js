@@ -47,7 +47,7 @@ module.exports = (cardInfo) => {
         <span class="cardDate" >${timeStr}</span>
       </div>
       <div class="cardContent" >
-        ${[yo`${cardInfo.content}`]}
+        <pre>${[yo`${cardInfo.content}`]}</pre>
       </div>
     </div>
   `;
