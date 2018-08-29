@@ -1,3 +1,4 @@
+/* eslint indent: 0 */
 const yo = require('yo-yo');
 
 module.exports = (app) => {

@@ -8,12 +8,15 @@ const renderHeader = require('../views/header');
 const renderLogin = require('../views/login');
 const renderSearch = require('../views/search');
 
-const loginView = 0;
-const searchView = 2;
-const errorView = 3;
-const postView = 4;
-
 module.exports = class App {
+  static get loginView() { return 0; }
+
+  static get searchView() { return 2; }
+
+  static get errorView() { return 3; }
+
+  static get postView() { return 4; }
+
   constructor(opts) {
     this.discardNotes();
     this.contentSelector = opts.contentSelector || 'main-app';
@@ -33,7 +36,7 @@ module.exports = class App {
    * Inspect the environment to determine which view to show on start.
    */
   static getDefaultView() {
-    return loginView;
+    return App.loginView;
   }
 
   /**
@@ -55,12 +58,12 @@ module.exports = class App {
         }
         errors('doSearch', response);
         this.lastError = response.status;
-        return this.render(errorView);
+        return this.render(App.errorView);
       })
       .catch((error) => {
         errors('Cannot perform search', searchQuery, error);
         this.lastError = error.message;
-        return this.render(errorView);
+        return this.render(App.errorView);
       });
   }
 
@@ -82,7 +85,7 @@ module.exports = class App {
     this.userName = undefined;
     this.secret = undefined;
     this.discardNotes();
-    return this.render(loginView);
+    return this.render(App.loginView);
   }
 
   async lookupBootstrapUserId() {
@@ -100,14 +103,14 @@ module.exports = class App {
                 this.userId = userId;
                 this.userName = userName;
                 this.secret = secret;
-                return this.render(searchView);
+                return this.render(App.searchView);
               }
               errors('lookupBootstrapUserId parse error', response.body);
-              return this.render(loginView);
+              return this.render(App.loginView);
             });
         }
         errors('Cannot look up user name', userName);
-        return this.render(loginView);
+        return this.render(App.loginView);
       });
   }
 
@@ -132,10 +135,10 @@ module.exports = class App {
 
     debug('render view', this.view);
     switch (this.view) {
-      case loginView:
+      case App.loginView:
         setContent(renderLogin(this));
         break;
-      case searchView:
+      case App.searchView:
         setContent(renderSearch(this));
         break;
       default:

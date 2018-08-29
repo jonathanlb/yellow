@@ -33,37 +33,34 @@ describe('Card component', () => {
     const cardInfo = createCard();
     const elt = renderCard(cardInfo);
 
-    const e = (x, y) => {
-      return {
-        clientX: x,
-        clientY: y,
-        path: [{className: 'cardHeader'}, elt],
-        preventDefault: () => undefined,
-      };
-    };
+    const e = (x, y) => ({
+      clientX: x,
+      clientY: y,
+      path: [{ className: 'cardHeader' }, elt],
+      preventDefault: () => undefined,
+    });
 
     const checkPosition = (x, y) => {
-      expect(`${elt.style.left} ${elt.style.top}`).
-        toEqual(`${x}px ${y}px`);
+      expect(`${elt.style.left} ${elt.style.top}`)
+        .toEqual(`${x}px ${y}px`);
     };
 
-    //checkPosition(0, 0); // style doesn't init
+    // checkPosition(0, 0); // style doesn't init
     elt.style.top = '0px';
     elt.style.left = '0px';
     elt.offsetTop = 5;
     elt.offsetLeft = 2;
 
-    elt.onmousemove(e(10,10));
+    elt.onmousemove(e(10, 10));
     checkPosition(0, 0);
-    elt.onmousedown(e(5,2));
+    elt.onmousedown(e(5, 2));
     checkPosition(0, 0);
-    elt.onmousemove(e(15,12));
+    elt.onmousemove(e(15, 12));
     checkPosition(10, 10);
     // test environment doesn't update offsetTop or offsetLeft....
-    elt.onmouseup(e(13,10));
+    elt.onmouseup(e(13, 10));
     checkPosition(10, 10);
-    elt.onmousemove(e(13,11));
+    elt.onmousemove(e(13, 11));
     checkPosition(10, 10);
-
   });
 });

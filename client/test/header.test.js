@@ -1,5 +1,9 @@
 const header = require('../views/header');
 
+// ??? placing App before header prevents static properties from being used
+// in header?
+const App = require('../src/app');
+
 describe('Header component', () => {
   test('renders', () => {
     const elt = header({});
@@ -20,8 +24,8 @@ describe('Header component', () => {
 
     const span = Array.from(elt.childNodes)
       .find(e => e.textContent === 'Post');
-    span.click();
-    expect(view).toBe(4);
+    span.onclick();
+    expect(view).toBe(App.postView);
   });
 
   test('searches', () => {
@@ -36,8 +40,8 @@ describe('Header component', () => {
 
     const span = Array.from(elt.childNodes)
       .find(e => e.textContent === 'Search');
-    span.click();
-    expect(view).toBe(2);
+    span.onclick();
+    expect(view).toBe(App.searchView);
   });
 
   test('logs out', () => {

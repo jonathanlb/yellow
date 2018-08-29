@@ -1,3 +1,4 @@
+/* eslint indent: 0 */
 const yo = require('yo-yo');
 
 module.exports = (app) => {
@@ -12,7 +13,7 @@ module.exports = (app) => {
     <div>
       <label for="searchField">Search:</label>
       <input type="text" id="${searchField}"
-        onkeyup=${e => {
+        onkeyup=${(e) => {
           if (e.key === 'Enter') {
             doSearch();
           }

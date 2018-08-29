@@ -71,9 +71,9 @@ describe('Application framework', () => {
 
     const app = new App(setUpDocument());
     return app.setup()
-      .then(() => expect(app.view).toEqual(0))
+      .then(() => expect(app.view).toEqual(App.loginView))
       .then(() => app.setUserNameAndPassword('Jonathan', 's3cr3t'))
-      .then(() => expect(app.view).toEqual(0));
+      .then(() => expect(app.view).toEqual(App.loginView));
   });
 
   test('Looks up password and sets view on success', () => {
@@ -81,9 +81,9 @@ describe('Application framework', () => {
 
     const app = new App(setUpDocument());
     return app.setup()
-      .then(() => expect(app.view).toEqual(0))
+      .then(() => expect(app.view).toEqual(App.loginView))
       .then(() => app.setUserNameAndPassword('Jonathan', 's3cr3t'))
-      .then(() => expect(app.view).toEqual(2));
+      .then(() => expect(app.view).toEqual(App.searchView));
   });
 
   test('Resets user name and password on logout', () => {
