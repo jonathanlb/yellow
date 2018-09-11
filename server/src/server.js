@@ -140,13 +140,12 @@ module.exports = class Server {
             if (content) {
               // replace content.author with a user name.
               return this.repo.getUserName(content.author)
-                .then(userName => {
+                .then((userName) => {
                   content.author = userName;
                   res.status(200).send(content);
                 });
-            } else {
-              res.status(404).send(`Not found: ${id}`);
             }
+            return res.status(404).send(`Not found: ${id}`);
           });
       }),
     );
@@ -155,16 +154,18 @@ module.exports = class Server {
   setupNoteSearch() {
     this.router.get(
       '/note/search/:secret/:user/:searchTerm',
-      (req, res) => this.checkSecret(req.params, res, () => {
-        return this.repo.searchNote(req.params.searchTerm, req.params.user)
+      (req, res) => this.checkSecret(
+        req.params,
+        res,
+        () => this.repo.searchNote(req.params.searchTerm, req.params.user)
           .then((results) => {
             debug('found', req.params.searchTerm, results);
             res.status(200).send(JSON.stringify(results));
           }).catch((error) => {
             errors('noteSearch', error);
             res.status(500).send(error.message);
-          });
-      }),
+          }),
+      ),
     );
   }
 

@@ -1,6 +1,7 @@
 const debug = require('debug')('sqliteNoteRepo');
 const errors = require('debug')('sqliteNoteRepo:error');
 const sqlite3 = require('sqlite3-promise').verbose();
+const utils = require('./dbCommon');
 
 /**
  * Note repository upon SqLite3.
@@ -25,13 +26,6 @@ module.exports = class SqliteNoteRepo {
   }
 
   /**
-   * Pad quotes in a string so we can store in in the db.
-   */
-  static escapeQuotes(str) {
-    return str.replace(/'/g, '\\\'');
-  }
-
-  /**
    * Check the secret against the user id.
    * TODO: add salt
    */
@@ -40,7 +34,7 @@ module.exports = class SqliteNoteRepo {
     return this.db.allAsync(query)
       .then((result) => {
         const ok = result.length > 0
-          && result[0].secret === SqliteNoteRepo.escapeQuotes(secret);
+          && result[0].secret === utils.escapeQuotes(secret);
         debug('checkSecret', ok);
         return ok;
       });
@@ -56,8 +50,8 @@ module.exports = class SqliteNoteRepo {
    */
   async createNote(content, user) {
     debug('createNote', content, user);
-    const escapedContent = SqliteNoteRepo.escapeQuotes(content);
-    const epochS = Math.round((new Date()).getTime() / 1000);
+    const escapedContent = utils.escapeQuotes(content);
+    const epochS = utils.getEpochSeconds();
     const query = `INSERT INTO notes(author, content, created) values (${user}, '${escapedContent}', ${epochS})`;
     debug(query);
     return this.db.runAsync(query)
@@ -69,8 +63,8 @@ module.exports = class SqliteNoteRepo {
    */
   async createUser(userName, secret) {
     debug('createUser', userName);
-    const escapedUserName = SqliteNoteRepo.escapeQuotes(userName);
-    const escapedSecret = SqliteNoteRepo.escapeQuotes(secret);
+    const escapedUserName = utils.escapeQuotes(userName);
+    const escapedSecret = utils.escapeQuotes(secret);
     const query = `INSERT INTO users(userName, secret) values ('${escapedUserName}', '${escapedSecret}')`;
     debug(query);
     return this.db.runAsync(query)
@@ -99,7 +93,7 @@ module.exports = class SqliteNoteRepo {
    */
   async getUserId(userName) {
     debug('getUserId', userName);
-    const query = `SELECT ROWID FROM users WHERE userName = '${SqliteNoteRepo.escapeQuotes(userName)}'`;
+    const query = `SELECT ROWID FROM users WHERE userName = '${utils.escapeQuotes(userName)}'`;
     debug(query);
     return this.db.allAsync(query)
       .then((x) => {
