@@ -5,7 +5,7 @@ describe('Test SqLite3 note repository', () => {
   test('Creates in memory db', () => {
     let repo = undefined;
     try {
-      repo = new Repo();
+      repo = new Repo({});
       expect(repo).not.toBeUndefined();
     } finally {
       if (repo) {
@@ -15,7 +15,7 @@ describe('Test SqLite3 note repository', () => {
   });
 
   test('Creates and retrieves notes', () => {
-    const repo = new Repo();
+    const repo = new Repo({});
     const user = 1;
     const content = 'Hello, World!';
 
@@ -36,7 +36,7 @@ describe('Test SqLite3 note repository', () => {
   });
 
   test('Creates and retrieves users', () => {
-    const repo = new Repo();
+    const repo = new Repo({});
     const userName = 'Jonathan';
     const secret = 's3cr3T';
     var userId = -1;
@@ -56,7 +56,7 @@ describe('Test SqLite3 note repository', () => {
   });
 
   test('Deletes notes', () => {
-    const repo = new Repo();
+    const repo = new Repo({});
     const userName = 'Jonathan';
     const secret = 's3cr3T';
     var userId = -1;
@@ -79,7 +79,7 @@ describe('Test SqLite3 note repository', () => {
   });
 
   test('Searches notes', () => {
-    const repo = new Repo();
+    const repo = new Repo({});
     const userId = 1;
 
     return repo.setup().
@@ -96,7 +96,7 @@ describe('Test SqLite3 note repository', () => {
   });
 
   test('Uses secrets', () => {
-    const repo = new Repo();
+    const repo = new Repo({});
     const userName = 'Jonathan';
     const secret = 's3cr3T';
     var userId = -1;
@@ -118,7 +118,7 @@ describe('Test SqLite3 note repository', () => {
   });
 
   test('Has method implementations', () => {
-    const repo = new Repo();
+    const repo = new Repo({});
     RepoStub.checkMethodNames(repo);
   });
 });

@@ -9,9 +9,8 @@ const utils = require('./dbCommon');
  * sqlite3 module load.
  */
 module.exports = class SqliteNoteRepo {
-  constructor(dbFile) {
-    this.dbFile = dbFile;
-    const fileOrMemory = dbFile || ':memory:';
+  constructor(opts) {
+    const fileOrMemory = opts.file || ':memory:';
     this.db = new sqlite3.Database(
       fileOrMemory,
       sqlite3.OPEN_CREATE | sqlite3.OPEN_READWRITE, // eslint-disable-line

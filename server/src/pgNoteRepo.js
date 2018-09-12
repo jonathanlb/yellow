@@ -3,20 +3,20 @@ const errors = require('debug')('pgRepo:error');
 const pg = require('pg-promise');
 const utils = require('./dbCommon');
 
-const default_dbName = 'yellow';
-const default_userName = 'u0_a62';
-
 /**
  * Note repository upon postgres.
  */
 module.exports = class PgRepo {
-  constructor() {
-    this.dbConfig = {
-      database: default_dbName,
-      host: 'localhost',
-      port: 5432,
-      user: default_userName,
-    };
+  constructor(opts) {
+    this.dbConfig = Object.assign(
+      {
+        database: 'yellow',
+        host: 'localhost',
+        port: 5432,
+        user: require('os').userInfo().username,
+      },
+      opts,
+    );
 
     this.db = pg({})(
       `postgres://${this.dbConfig.user}@${this.dbConfig.host}:${this.dbConfig.port}/${this.dbConfig.database}`,
@@ -71,14 +71,16 @@ module.exports = class PgRepo {
     debug('getUserId', userName);
     const query = `SELECT id FROM users WHERE userName = '${utils.escapeQuotes(userName)}'`;
     debug(query);
-    return this.db.oneOrNone(query);
+    return this.db.oneOrNone(query)
+      .then(result => result.id);
   }
 
   async getUserName(userId) {
     debug('getUserName', userId);
     const query = `SELECT userName FROM users WHERE id = ${userId}`;
     debug(query);
-    return this.db.oneOrNone(query);
+    return this.db.oneOrNone(query)
+      .then(result => result.userName);
   }
 
   /**
