@@ -1,9 +1,9 @@
 const express = require('express');
 const debug = require('debug')('index');
+const config = require('./config');
 const Server = require('./server');
-const Repo = require('./sqliteNoteRepo');
 
-const repo = new Repo('./data/notes.db');
+const repo = config.repo();
 const router = express();
 const server = new Server(router, repo);
 const port = process.env.PORT || 3000;
