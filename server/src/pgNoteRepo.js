@@ -1,5 +1,6 @@
 const debug = require('debug')('pgRepo');
 const errors = require('debug')('pgRepo:error');
+const os = require('os');
 const pg = require('pg-promise');
 const utils = require('./dbCommon');
 
@@ -13,13 +14,9 @@ module.exports = class PgRepo {
         database: 'yellow',
         host: 'localhost',
         port: 5432,
-        user: require('os').userInfo().username,
+        user: os.userInfo().username,
       },
       opts,
-    );
-
-    this.db = pg({})(
-      `postgres://${this.dbConfig.user}@${this.dbConfig.host}:${this.dbConfig.port}/${this.dbConfig.database}`,
     );
   }
 
@@ -100,10 +97,14 @@ module.exports = class PgRepo {
     debug('search', searchTerms, user);
     const query = `SELECT id FROM notes WHERE ${searchTerms}`;
     return this.db.any(query)
-      .map(row => row.id);
+      .then(results => results.map(row => row.id));
   }
 
   async setup() {
+    this.db = pg({})(
+      `postgres://${this.dbConfig.user}@${this.dbConfig.host}:${this.dbConfig.port}/${this.dbConfig.database}`,
+    );
+
     const createNotes = 'CREATE TABLE IF NOT EXISTS notes(author INT, content TEXT, created INT, id SERIAL PRIMARY KEY)';
     debug('setup', createNotes);
     return this.db.none(createNotes)
