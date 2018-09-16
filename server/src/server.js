@@ -141,6 +141,7 @@ module.exports = class Server {
               // replace content.author with a user name.
               return this.repo.getUserName(content.author)
                 .then((userName) => {
+                  // eslint-disable-next-line no-param-reassign
                   content.author = userName;
                   res.status(200).send(content);
                 });

@@ -10,13 +10,15 @@ const renderPost = require('../views/post');
 const renderSearch = require('../views/search');
 const Views = require('../views/views');
 
+const defaultServerPort = 3000;
+
 module.exports = class App {
   constructor(opts) {
     this.discardNotes();
     this.contentSelector = opts.contentSelector || 'main-app';
     this.lastError = undefined;
     this.secret = undefined;
-    this.serverPrefix = opts.serverPrefix || 'localhost:3000/';
+    this.serverPrefix = App.getServerPrefix(opts);
     this.userId = -1;
     this.userName = undefined;
     this.view = App.getDefaultView();
@@ -31,6 +33,16 @@ module.exports = class App {
    */
   static getDefaultView() {
     return Views.login;
+  }
+
+  static getServerPrefix(opts) {
+    if (opts.serverPrefix) {
+      debug('using server prefix', opts.serverPrefix);
+      return opts.serverPrefix;
+    }
+    const result = `${window.location.protocol}//${window.location.hostname}:${defaultServerPort}/`;
+    debug('inferring server at', result);
+    return result;
   }
 
   async createNote(content) {
