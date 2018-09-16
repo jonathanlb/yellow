@@ -73,15 +73,10 @@ module.exports = class App {
     return fetch(cmd)
       .then((response) => {
         if (response.status === 200) {
-          // map result ignored aside from unit test count....
-          let cardsResult = [];
           return response.json()
             .then(ids => ids.map(this.loadCard))
-            .then((cards) => {
-              cardsResult = cards;
-              return this.render();
-            })
-            .then(() => cardsResult);
+            .then(cards => Promise.all(cards)) // render once. revisit if search is slow
+            .then(this.render);
         }
         errors('doSearch', response);
         this.lastError = `Cannot search: ${response.status}`;

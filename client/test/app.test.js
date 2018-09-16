@@ -155,15 +155,18 @@ describe('Application framework', () => {
     const app = new App(setUpDocument());
     return app.setup()
       .then(() => {
+        expect(document.getElementsByClassName('cardContainer').length).toBe(0);
+      })
+      .then(() => {
         app.userId = userId;
         app.secret = secret;
         return app.doSearch(query);
       })
-      .then((response) => {
+      .then(() => {
         expect(global.fetch.mock.calls.length, 'search + 3 cards').toBe(4);
         expect(global.fetch.mock.calls[0][0])
           .toEqual(`http://localhost:3000/note/search/${secret}/${userId}/${encodeURIComponent(query)}`);
-        expect(response.length).toEqual(3);
+        expect(document.getElementsByClassName('cardContainer').length).toBe(3);
       });
   });
 });
