@@ -24,6 +24,8 @@ module.exports = class App {
     ['createNote', 'doSearch', 'loadCard', 'logout', 'lookupBootstrapUserId',
       'render', 'setUserNameAndPassword']
       .forEach((m) => { this[m] = this[m].bind(this); });
+
+		this.doPostLoginAction = () => this.render(Views.search);
   }
 
   /**
@@ -118,7 +120,7 @@ module.exports = class App {
                 this.userId = userId;
                 this.userName = userName;
                 this.secret = secret;
-                return this.render(Views.search);
+                return this.doPostLoginAction();
               }
               errors('lookupBootstrapUserId parse error', response.body);
               return this.render(Views.login);
