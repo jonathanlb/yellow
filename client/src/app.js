@@ -10,6 +10,7 @@ const renderPost = require('../views/post');
 const renderSearch = require('../views/search');
 const Views = require('../views/views');
 
+const defaultQuery = 'id > -1 ORDER BY ID DESC LIMIT 5';
 const defaultServerPort = 3000;
 
 module.exports = class App {
@@ -27,7 +28,10 @@ module.exports = class App {
       'render', 'setUserNameAndPassword']
       .forEach((m) => { this[m] = this[m].bind(this); });
 
-		this.doPostLoginAction = () => this.render(Views.search);
+		this.doPostLoginAction = () => {
+			this.render(Views.view);
+			return this.doSearch(defaultQuery);
+		}
   }
 
   /**
@@ -78,7 +82,7 @@ module.exports = class App {
           return response.json()
             .then(ids => ids.map(this.loadCard))
             .then(cards => Promise.all(cards)) // render once. revisit if search is slow
-            .then(this.render);
+            .then(() => this.render());
         }
         errors('doSearch', response);
         this.lastError = `Cannot search: ${response.status}`;

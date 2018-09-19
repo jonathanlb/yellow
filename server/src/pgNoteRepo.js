@@ -77,7 +77,7 @@ module.exports = class PgRepo {
     const query = `SELECT userName FROM users WHERE id = ${userId}`;
     debug(query);
     return this.db.oneOrNone(query)
-      .then(result => result.userName);
+      .then(result => result.username); // pg clobbers column-name case.
   }
 
   /**
