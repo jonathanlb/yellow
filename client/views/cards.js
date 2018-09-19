@@ -13,12 +13,15 @@ module.exports = (cardsInfo) => {
     result.forEach((card) => {
       // Don't try to set element.offsetXXX; stick with style.
       if (lastY === undefined) {
+        // eslint-disable-next-line no-param-reassign
         card.style.top = `${card.offsetTop}px`;
         lastY = card.offsetTop + card.offsetHeight + margin;
       } else {
+        // eslint-disable-next-line no-param-reassign
         card.style.top = `${lastY}px`;
         lastY += card.offsetHeight + margin;
       }
+      // eslint-disable-next-line no-param-reassign
       card.style.left = `${card.offsetLeft}px`;
       debug('delayed', lastY, card.offsetHeight, card.offsetTop, card);
     });

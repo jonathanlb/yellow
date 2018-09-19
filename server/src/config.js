@@ -1,13 +1,13 @@
 const config = {
-  // db: 'sqlite',
-  db: 'postgres',
+  db: 'sqlite',
+  // db: 'postgres',
   postgres: {
     database: 'yellow',
     host: 'localhost',
     user: 'u0_a62',
   },
   sqlite: {
-    file: '../data/notes.db',
+    file: 'data/notes.db', // relative to server root
   },
 };
 

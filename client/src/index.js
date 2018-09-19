@@ -2,7 +2,7 @@ const App = require('./app');
 
 const opts = {
   contentSelector: 'main-app',
-  serverPrefix: 'http://localhost:3000/',
+  serverPrefix: App.getServerPrefix({}),
 };
 const app = new App(opts);
 app.setup()

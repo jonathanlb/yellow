@@ -46,6 +46,14 @@ describe('Application framework', () => {
       });
   });
 
+  test('Gets default server host', () => {
+    const server = App.getServerPrefix({});
+    expect(server.endsWith(':3000/'), `host ${server} ends with port`).toBe(true);
+    expect(server.includes('undefined', `host ${server} has no undefined portions`)).toBe(false);
+    const serverStr = 'http://bilbo.com:3456/';
+    expect(App.getServerPrefix({ serverPrefix: serverStr })).toEqual(serverStr);
+  });
+
   test('Initializes', () => {
     const app = new App(setUpDocument());
     return app.setup()
@@ -81,7 +89,7 @@ describe('Application framework', () => {
       .then(() => {
         expect(global.fetch.mock.calls.length).toBe(1);
         expect(global.fetch.mock.calls[0][0])
-          .toEqual(`localhost:3000/note/get/${secret}/${userId}/${cardId}`);
+          .toEqual(`http://localhost:3000/note/get/${secret}/${userId}/${cardId}`);
 
         const content = document.getElementById(selector).innerHTML;
         expect(content.includes(message), `Looking for card in ${content}`)
@@ -147,15 +155,18 @@ describe('Application framework', () => {
     const app = new App(setUpDocument());
     return app.setup()
       .then(() => {
+        expect(document.getElementsByClassName('cardContainer').length).toBe(0);
+      })
+      .then(() => {
         app.userId = userId;
         app.secret = secret;
         return app.doSearch(query);
       })
-      .then((response) => {
+      .then(() => {
         expect(global.fetch.mock.calls.length, 'search + 3 cards').toBe(4);
         expect(global.fetch.mock.calls[0][0])
-          .toEqual(`localhost:3000/note/search/${secret}/${userId}/${encodeURIComponent(query)}`);
-        expect(response.length).toEqual(3);
+          .toEqual(`http://localhost:3000/note/search/${secret}/${userId}/${encodeURIComponent(query)}`);
+        expect(document.getElementsByClassName('cardContainer').length).toBe(3);
       });
   });
 });

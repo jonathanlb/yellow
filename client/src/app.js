@@ -10,13 +10,15 @@ const renderPost = require('../views/post');
 const renderSearch = require('../views/search');
 const Views = require('../views/views');
 
+const defaultServerPort = 3000;
+
 module.exports = class App {
   constructor(opts) {
     this.discardNotes();
     this.contentSelector = opts.contentSelector || 'main-app';
     this.lastError = undefined;
     this.secret = undefined;
-    this.serverPrefix = opts.serverPrefix || 'localhost:3000/';
+    this.serverPrefix = App.getServerPrefix(opts);
     this.userId = -1;
     this.userName = undefined;
     this.view = App.getDefaultView();
@@ -33,6 +35,16 @@ module.exports = class App {
    */
   static getDefaultView() {
     return Views.login;
+  }
+
+  static getServerPrefix(opts) {
+    if (opts.serverPrefix) {
+      debug('using server prefix', opts.serverPrefix);
+      return opts.serverPrefix;
+    }
+    const result = `${window.location.protocol}//${window.location.hostname}:${defaultServerPort}/`;
+    debug('inferring server at', result);
+    return result;
   }
 
   async createNote(content) {
@@ -63,15 +75,10 @@ module.exports = class App {
     return fetch(cmd)
       .then((response) => {
         if (response.status === 200) {
-          // map result ignored aside from unit test count....
-          let cardsResult = [];
           return response.json()
             .then(ids => ids.map(this.loadCard))
-            .then((cards) => {
-              cardsResult = cards;
-              return this.render();
-            })
-            .then(() => cardsResult);
+            .then(cards => Promise.all(cards)) // render once. revisit if search is slow
+            .then(this.render);
         }
         errors('doSearch', response);
         this.lastError = `Cannot search: ${response.status}`;

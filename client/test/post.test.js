@@ -16,6 +16,7 @@ describe('Post component', () => {
       },
     };
 
+    document.body.innerHTML = '';
     document.createElement('body');
     const elt = post(app);
     document.body.appendChild(elt);
@@ -44,6 +45,7 @@ describe('Post component', () => {
       },
     };
 
+    document.body.innerHTML = '';
     document.createElement('body');
     const elt = post(app);
     document.body.appendChild(elt);
