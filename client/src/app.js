@@ -10,7 +10,7 @@ const renderPost = require('../views/post');
 const renderSearch = require('../views/search');
 const Views = require('../views/views');
 
-const defaultQuery = 'id > -1 ORDER BY ID DESC LIMIT 5';
+const defaultQuery = '%';
 const defaultServerPort = 3000;
 
 module.exports = class App {
@@ -28,10 +28,10 @@ module.exports = class App {
       'render', 'setUserNameAndPassword']
       .forEach((m) => { this[m] = this[m].bind(this); });
 
-		this.doPostLoginAction = () => {
-			this.render(Views.view);
-			return this.doSearch(defaultQuery);
-		}
+    this.doPostLoginAction = () => {
+      this.render(Views.view);
+      return this.doSearch(defaultQuery);
+    };
   }
 
   /**

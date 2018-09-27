@@ -4,9 +4,12 @@ const renderCard = require('./card');
 module.exports = (cardsInfo) => {
   let lastY;
   const margin = 5; // pull from style
+  function cmp(a, b) {
+    return Math.sign(b.created - a.created);
+  }
 
   // TODO: only create an element for newly loaded cards, to keep layout?
-  const result = cardsInfo.map(renderCard);
+  const result = cardsInfo.sort(cmp).map(renderCard);
 
   // XXX how to know when rendered to update cards? for now, hardcode 100ms
   setTimeout(() => {
