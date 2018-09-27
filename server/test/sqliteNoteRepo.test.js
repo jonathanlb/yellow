@@ -78,6 +78,37 @@ describe('Test SqLite3 note repository', () => {
       });
   });
 
+  test('Handles failed author conditions', () => {
+    const repo = new Repo({});
+    const userId = 1;
+
+    return repo.setup().
+      then(() => repo.createNote('foo', userId)).
+      then(() => repo.createNote('bar', userId)).
+      then(() => repo.createNote('baz', userId)).
+      then(() => repo.searchNote('author: Jonathan %b%', userId)).
+      then(result => expect(result).toEqual([])).
+      then(() => repo.close()).
+      catch(e => {
+        repo.close();
+        throw e;
+      });
+  });
+
+  test('Handles failed user id lookup', () => {
+    const repo = new Repo({});
+    const userId = 1;
+
+    return repo.setup().
+      then(() => repo.getUserId('Bilbo Baggins')).
+      then(result => expect(result).toBe(-1)).
+      then(() => repo.close()).
+      catch(e => {
+        repo.close();
+        throw e;
+      });
+  });
+
   test('Searches notes', () => {
     const repo = new Repo({});
     const userId = 1;
@@ -86,8 +117,33 @@ describe('Test SqLite3 note repository', () => {
       then(() => repo.createNote('foo', userId)).
       then(() => repo.createNote('bar', userId)).
       then(() => repo.createNote('baz', userId)).
-      then(() => repo.searchNote('content LIKE \'%b%\'', userId)).
-      then(result => expect(result).toEqual([2,3])).
+      then(() => repo.searchNote('%b%', userId)).
+      then(result => expect(result).toEqual([3,2])).
+      then(() => repo.close()).
+      catch(e => {
+        repo.close();
+        throw e;
+      });
+  });
+
+  test('Searches notes by author', () => {
+    const repo = new Repo({});
+    const userName = 'Jonathan';
+    const secret = 's3cr3T';
+    let userId, otherUserId;
+
+    return repo.setup().
+      then(() => repo.createUser('Mattie', 'woof!')).
+      then(id => otherUserId = id).
+      then(() => repo.createUser(userName, secret)).
+      then(id => userId = id).
+      then(() => repo.createNote('woof', otherUserId)).
+      then(() => repo.createNote('hello', userId)).
+      then(() => repo.createNote('sniff', otherUserId)).
+      then(() => repo.createNote('todos', userId)).
+      then(() => repo.createNote('scratch', otherUserId)).
+      then(() => repo.searchNote(`author: ${userName}`, userId)).
+      then(result => expect(result).toEqual([4,2])).
       then(() => repo.close()).
       catch(e => {
         repo.close();

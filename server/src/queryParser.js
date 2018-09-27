@@ -1,9 +1,19 @@
 const util = require('./dbCommon');
 
+function conditionAfter(term, timeColumn) {
+  return `${timeColumn} > ${util.dateToEpochSecs(term)}`;
+}
+
+function conditionBefore(term, timeColumn) {
+  return `${timeColumn} < ${util.dateToEpochSecs(term)}`;
+}
+
 function condition(keyword, term, opt) {
-  if (keyword === 'after') {
+  if (term.length === 0) {
+    return '';
+  } if (keyword === 'after') {
     return conditionAfter(term, opt);
-  } else if (keyword === 'before') {
+  } if (keyword === 'before') {
     return conditionBefore(term, opt);
   }
 
@@ -14,20 +24,12 @@ function condition(keyword, term, opt) {
     case 'string':
       if (term.includes('%')) {
         return `${keyword} like '${term}'`;
-      } else {
-        return `${keyword} = '${term}'`;
       }
+      return `${keyword} = '${term}'`;
+
     default:
       throw new Error(`cannot interpret term ${term} with type ${typeOfTerm}`);
   }
-}
-
-function conditionAfter(term, timeColumn) {
-  return `${timeColumn} > ${util.dateToEpochSecs(term)}`;
-}
-
-function conditionBefore(term, timeColumn) {
-  return `${timeColumn} < ${util.dateToEpochSecs(term)}`;
 }
 
 /**
@@ -42,25 +44,25 @@ function conditionBefore(term, timeColumn) {
  */
 function parse(query) {
   let toParse = query;
-  let wheres = [];
-  let m, m0;
+  const wheres = [];
+  let m; let
+    m0;
 
   do {
     m = toParse.match(/^\s*([A-Za-z_]*):\s*(.*)/);
     if (m) {
-      let keyword = m[1];
+      const keyword = m[1];
       let rest = m[2];
       let quote = '';
-      let searchTerm;
       if (rest.startsWith('"') || rest.startsWith("'")) {
-        quote = rest[0];
-        let quoted = new RegExp(`${quote}([^${quote}]*)${quote}(.*)`);
+        quote = rest[0]; // eslint-disable-line prefer-destructuring
+        const quoted = new RegExp(`${quote}([^${quote}]*)${quote}(.*)`);
         m0 = rest.match(quoted);
       } else {
         m0 = rest.match(/([^\s]+)(.*)/);
       }
-      searchTerm = m0[1];
-      rest = m0[2];
+      const searchTerm = m0[1];
+      rest = m0[2]; // eslint-disable-line prefer-destructuring
       wheres.push([keyword, searchTerm]);
       toParse = rest || '';
     }
@@ -71,5 +73,5 @@ function parse(query) {
 }
 
 module.exports = {
-  condition, parse
+  condition, parse,
 };

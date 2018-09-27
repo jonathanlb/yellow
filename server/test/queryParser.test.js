@@ -33,6 +33,11 @@ describe('Query parser', () => {
     expect(result).toEqual([query]);
   });
 
+  it('ignores empty conditions', () => {
+    expect(Query.condition('content', ''))
+      .toEqual('');
+  });
+
   it('extracts keyword queries', () => {
     const query = 'after: 2018-09-07 where is my phone';
     const result = Query.parse(query);

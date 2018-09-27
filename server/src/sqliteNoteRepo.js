@@ -2,6 +2,9 @@ const debug = require('debug')('sqliteNoteRepo');
 const errors = require('debug')('sqliteNoteRepo:error');
 const sqlite3 = require('sqlite3-promise').verbose();
 const utils = require('./dbCommon');
+const Query = require('./queryParser');
+
+const queryLimit = 6;
 
 /**
  * Note repository upon SqLite3.
@@ -89,6 +92,7 @@ module.exports = class SqliteNoteRepo {
 
   /**
    * Return a promise returning the user id from the user name.
+   * Return promise of -1 on lookup failure, for the moment...
    */
   async getUserId(userName) {
     debug('getUserId', userName);
@@ -97,7 +101,10 @@ module.exports = class SqliteNoteRepo {
     return this.db.allAsync(query)
       .then((x) => {
         debug('GET', x);
-        return x[0].rowid;
+        if (x && x.length) {
+          return x[0].rowid;
+        }
+        return -1;
       });
   }
 
@@ -142,10 +149,29 @@ module.exports = class SqliteNoteRepo {
    */
   async searchNote(searchTerms, user) {
     debug('searchNote', searchTerms, user);
-    const query = `SELECT rowid FROM notes WHERE ${searchTerms}`;
-    debug(query);
-    return this.db.allAsync(query)
-      .then(result => result.map(entry => entry.rowid));
+    const queryTerms = Query.parse(searchTerms);
+    const contentQuery = Query.condition('content', queryTerms[0]);
+    const conditionsPromises = Promise.all(
+      queryTerms.slice(1)
+        .map((keyTerm) => {
+          if (keyTerm[0] === 'author') {
+            return this.getUserId(keyTerm[1])
+              .then(id => ['author', id]);
+          }
+          return Promise.resolve(keyTerm);
+        }),
+    )
+      .then(conditions => conditions.map(keyTerm => Query.condition(keyTerm[0], keyTerm[1], 'created')));
+
+    return conditionsPromises.then((conditions) => {
+      const contentQueryAnd = contentQuery.length && conditions.length
+        ? `${contentQuery} AND`
+        : contentQuery;
+      const query = `SELECT rowid FROM notes WHERE ${contentQueryAnd} ${conditions.join(' AND ')} ORDER BY rowid DESC LIMIT ${queryLimit}`;
+      debug(query);
+      return this.db.allAsync(query)
+        .then(result => result.map(entry => entry.rowid));
+    });
   }
 
   /**
