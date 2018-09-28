@@ -109,12 +109,13 @@ describe('Application framework', () => {
 
   test('Looks up password and sets view on success', () => {
     global.fetch.mockResponseOnce('37');
+    global.fetch.mockResponseOnce('[]'); // send empty search results unless we mock more
 
     const app = new App(setUpDocument());
     return app.setup()
       .then(() => expect(app.view).toEqual(Views.login))
       .then(() => app.setUserNameAndPassword('Jonathan', 's3cr3t'))
-      .then(() => expect(app.view).toEqual(Views.search));
+      .then(() => expect(app.view).toEqual(Views.view));
   });
 
   test('Resets user name and password on logout', () => {

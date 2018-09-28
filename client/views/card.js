@@ -4,6 +4,7 @@ const yo = require('yo-yo');
 const cardClass = 'cardContainer';
 
 module.exports = (cardInfo) => {
+  const cardId = `yellowCard-${cardInfo.id}`;
   let dragging = false;
   let x0 = 0;
   let x1 = 0;
@@ -37,14 +38,24 @@ module.exports = (cardInfo) => {
   const timeStr = new Date(cardInfo.created * 1000)
     .toLocaleDateString();
 
+  const closeCard = () => {
+    if (cardInfo.close) {
+      cardInfo.close();
+    }
+    const elt = document.getElementById(cardId);
+    if (elt) {
+      elt.remove();
+    }
+  };
+
   return yo`
-    <div class="${cardClass}" id="yellowCard-${cardInfo.id}"
+    <div class="${cardClass}" id="${cardId}"
       onmousedown=${mouseDown}
       onmousemove=${mouseMove}
       onmouseup=${mouseUp} >
       <div class="cardHeader" >
         <span class="cardAuthor" >${cardInfo.author}</span>
-        <span class="cardDate" >${timeStr}</span>
+        <span class="cardDate" >${timeStr} <a onclick=${closeCard}>X</a></span>
       </div>
       <div class="cardContent" >
         <pre>${[yo`${cardInfo.content}`]}</pre>

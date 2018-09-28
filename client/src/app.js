@@ -103,6 +103,8 @@ module.exports = class App {
       .then((cardInfo) => {
         debug('loadedCard', cardInfo);
         this.cards[cardInfo.id] = cardInfo;
+        // eslint-disable-next-line no-param-reassign
+        cardInfo.close = () => this.unloadCard(cardInfo.id);
         return cardInfo;
       })
       .catch(error => errors('cannot load card', id, error));
@@ -193,5 +195,9 @@ module.exports = class App {
 
   async setup() {
     this.render();
+  }
+
+  unloadCard(cardId) {
+    delete this.cards[cardId];
   }
 };

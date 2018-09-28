@@ -47,6 +47,12 @@ label {
 	padding: 2px;
 }
 
+/* hyperlink text used for ascii graphics close marker. */
+.cardDate a {
+	font-style: normal;
+	font-weight: bold;
+}
+
 .cardHeader {
 	background: palegreen;
 	cursor: move;
