@@ -5,6 +5,10 @@ const utils = require('./dbCommon');
 const Query = require('./queryParser');
 
 const queryLimit = 6;
+const privateAccess = 0;
+const protectedAccess = 1;
+const publicAccess = 2;
+const defaultAccess = protectedAccess;
 
 /**
  * Note repository upon SqLite3.
@@ -25,6 +29,31 @@ module.exports = class SqliteNoteRepo {
         }
       },
     );
+  }
+
+  /**
+   * Grant read access of the note to the user.
+   *
+   * @param note object containing note row fields.
+   * @param userId integer user id of the prospective reader.
+   */
+  async allowAccess(note, userId) {
+    debug('allowAccess', note.id, note.author, userId, note.privacy);
+    if (note.author === userId) {
+      return true;
+    } if (note.privacy === publicAccess) {
+      return true;
+    } if (note.privacy === protectedAccess) {
+      const query = `SELECT user FROM sharing WHERE user=${note.author} AND sharesWith=${userId}`;
+      debug('allowAccess', query);
+      return this.db.allAsync(query)
+        .then((result) => {
+          debug('allowAccess', result);
+          return result.length > 0;
+        });
+    }
+    errors('Unknown access mode:', note.privacy, 'noteId:', note.id);
+    return false;
   }
 
   /**
@@ -54,7 +83,7 @@ module.exports = class SqliteNoteRepo {
     debug('createNote', content, user);
     const escapedContent = utils.escapeQuotes(content);
     const epochS = utils.getEpochSeconds();
-    const query = `INSERT INTO notes(author, content, created) values (${user}, '${escapedContent}', ${epochS})`;
+    const query = `INSERT INTO notes(author, content, created, privacy) values (${user}, '${escapedContent}', ${epochS}, ${defaultAccess})`;
     debug(query);
     return this.db.runAsync(query)
       .then(() => this.lastId());
@@ -78,13 +107,18 @@ module.exports = class SqliteNoteRepo {
    */
   async getNote(noteId, user) {
     debug('getNote', noteId, user);
-    const query = `SELECT author, content, created, ROWID as id FROM notes WHERE ROWID = ${noteId}`;
+    const query = `SELECT author, content, created, ROWID as id, privacy, renderHint FROM notes WHERE ROWID = ${noteId}`;
     debug(query);
     return this.db.allAsync(query)
       .then((x) => {
         debug('GET', x);
         if (x.length > 0) {
-          return x[0];
+          const [note] = x;
+          return this.allowAccess(note, user)
+            .then((granted) => {
+              debug('getNote granted', granted, user, note.id);
+              return granted ? note : undefined;
+            });
         }
         return undefined;
       });
@@ -145,7 +179,8 @@ module.exports = class SqliteNoteRepo {
    * Return a promise to an array of note ids.
    * @param searchTerms the substring completing the SQLite3 search query
    *  "SELECT rowid FROM notes WHERE ..."
-   * TODO: check permissions.
+   * TODO: check permissions.  Currently the content is protected, but search
+   *       results (note ids) are not.
    */
   async searchNote(searchTerms, user) {
     debug('searchNote', searchTerms, user);
@@ -174,17 +209,57 @@ module.exports = class SqliteNoteRepo {
     });
   }
 
+  async setNoteAccess(noteId, user, accessMode) {
+    const query = `UPDATE notes SET privacy=${accessMode} WHERE rowid=${noteId} AND author=${user}`;
+    debug('setPrivate', query);
+    return this.db.runAsync(query);
+  }
+
+  async setNotePrivate(noteId, user) {
+    return this.setNoteAccess(noteId, user, privateAccess);
+  }
+
+  async setNoteProtected(noteId, user) {
+    return this.setNoteAccess(noteId, user, protectedAccess);
+  }
+
+  async setNotePublic(noteId, user) {
+    return this.setNoteAccess(noteId, user, publicAccess);
+  }
+
   /**
    * Set up the tables
    */
   async setup() {
-    const createNotes = 'CREATE TABLE IF NOT EXISTS notes(author INT, content TEXT, created INT)';
-    debug('setup', createNotes);
-    return this.db.runAsync(createNotes)
-      .then(() => {
-        const createUsers = 'CREATE TABLE IF NOT EXISTS users(userName TEXT, secret TEXT)';
-        debug('setup', createUsers);
-        return this.db.runAsync(createUsers);
+    return [
+      'CREATE TABLE IF NOT EXISTS notes (author INT, content TEXT, created INT, privacy INT, renderHint INT)',
+      'CREATE TABLE IF NOT EXISTS users (userName TEXT, secret TEXT)',
+      'CREATE TABLE IF NOT EXISTS sharing (user INT, sharesWith INT, UNIQUE(user, sharesWith))',
+      'CREATE INDEX IF NOT EXISTS idx_shares_with ON sharing (sharesWith)',
+      'CREATE INDEX IF NOT EXISTS idx_sharing_users ON sharing (user)',
+    ].reduce(
+      (accum, query) => {
+        debug('setup', query);
+        return accum.then(() => this.db.runAsync(query));
+      },
+      Promise.resolve(true),
+    );
+  }
+
+  async userBlocks(userId, friendId) {
+    const query = `DELETE FROM sharing WHERE user=${userId} AND sharesWith=${friendId}`;
+    debug('userBlocks', query);
+    return this.db.runAsync(query);
+  }
+
+  async userSharesWith(userId, friendId) {
+    const query = `INSERT INTO sharing (user, sharesWith) VALUES (${userId}, ${friendId})`;
+    debug('userSharesWith', query);
+    return this.db.runAsync(query)
+      .catch((error) => {
+        if (!error.message.includes('UNIQUE constraint failed')) {
+          throw error;
+        }
       });
   }
 };

@@ -18,7 +18,12 @@ module.exports = class InMemoryRepo {
       'getUserName',
       'removeNote',
       'searchNote',
-      'setup'
+      'setNotePrivate',
+      'setNoteProtected',
+      'setNotePublic',
+      'setup',
+      'userBlocks',
+      'userSharesWith'
     ];
 
     methodNames.forEach(key => {
@@ -118,7 +123,27 @@ module.exports = class InMemoryRepo {
     }
   }
 
+  async setNotePrivate(noteId, user) {
+
+  }
+
+  async setNoteProtected(noteId, user) {
+
+  }
+
+  async setNotePublic(noteId, user) {
+
+  }
+
   async setup() {
     return "OK";
+  }
+
+  async userBlocks(userId, friendId) {
+
+  }
+
+  async userSharesWith(userId, friendId) {
+
   }
 }

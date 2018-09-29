@@ -134,7 +134,8 @@ module.exports = class Server {
       '/note/get/:secret/:user/:noteId',
       (req, res) => this.checkSecret(req.params, res, () => {
         const id = req.params.noteId;
-        return this.repo.getNote(id, req.params.user)
+        const userId = parseInt(req.params.user, 10);
+        return this.repo.getNote(id, userId)
           .then((content) => {
             debug('retrieved', id, content);
             if (content) {
@@ -158,7 +159,7 @@ module.exports = class Server {
       (req, res) => this.checkSecret(
         req.params,
         res,
-        () => this.repo.searchNote(req.params.searchTerm, req.params.user)
+        () => this.repo.searchNote(req.params.searchTerm, parseInt(req.params.user, 10))
           .then((results) => {
             debug('found', req.params.searchTerm, results);
             res.status(200).send(JSON.stringify(results));

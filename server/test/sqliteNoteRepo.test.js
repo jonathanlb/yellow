@@ -151,6 +151,121 @@ describe('Test SqLite3 note repository', () => {
       });
   });
 
+  test('Protects note default/protected privacy', () => {
+    const repo = new Repo({});
+    const userName = 'Jonathan';
+    const secret = 's3cr3T';
+    var noteId = -1;
+    var userId = -1;
+    var friendId = -1;
+
+    return repo.setup().
+      then(() => repo.createUser(userName, secret)).
+      then(id => {
+        userId = id;
+        friendId = userId + 1;
+      }).
+      then(() => repo.createNote('hello', userId)).
+      then(id => noteId = id).
+      then(() => repo.getNote(noteId, userId)).
+      then(note => expect(note.id).toEqual(noteId)).
+      then(() => repo.getNote(noteId, friendId)).
+      then(note => expect(note).toBeUndefined()).
+      then(() => repo.userSharesWith(userId, friendId)).
+      then(() => repo.getNote(noteId, friendId)).
+      then(note => expect(note.id).toEqual(noteId)).
+      then(() => repo.userBlocks(userId, friendId)).
+      then(note => expect(note).toBeUndefined()).
+      then(() => repo.close()).
+      catch(e => {
+        repo.close();
+        throw e;
+      });
+  });
+
+  test('Protects note privacy', () => {
+    const repo = new Repo({});
+    const userName = 'Jonathan';
+    const secret = 's3cr3T';
+    var noteId = -1;
+    var userId = -1;
+    var friendId = -1;
+
+    return repo.setup().
+      then(() => repo.createUser(userName, secret)).
+      then(id => {
+        userId = id;
+        friendId = userId + 1;
+      }).
+      then(() => repo.createNote('hello', userId)).
+      then(id => noteId = id).
+      then(() => repo.setNotePrivate(noteId, userId)).
+      then(() => repo.userSharesWith(userId, friendId)).
+      then(() => repo.getNote(noteId, userId)).
+      then(note => expect(note.id).toEqual(noteId)).
+      then(() => repo.getNote(noteId, friendId)).
+      then(note => expect(note).toBeUndefined()).
+      then(() => repo.close()).
+      catch(e => {
+        repo.close();
+        throw e;
+      });
+  });
+
+  test('Publishes public notes', () => {
+    const repo = new Repo({});
+    const userName = 'Jonathan';
+    const secret = 's3cr3T';
+    var noteId = -1;
+    var userId = -1;
+
+    return repo.setup().
+      then(() => repo.createUser(userName, secret)).
+      then(id => {
+        userId = id;
+      }).
+      then(() => repo.createNote('hello', userId)).
+      then(id => noteId = id).
+      then(() => repo.setNotePublic(noteId, userId)).
+      then(() => repo.getNote(noteId, userId + 2)).
+      then(note => expect(note.id).toEqual(noteId)).
+      then(() => repo.close()).
+      catch(e => {
+        repo.close();
+        throw e;
+      });
+  });
+
+  test('Sharing is idempotent', () => {
+    const repo = new Repo({});
+    const userName = 'Jonathan';
+    const secret = 's3cr3T';
+    var noteId = -1;
+    var userId = -1;
+    var friendId = -1;
+
+    return repo.setup().
+      then(() => repo.createUser(userName, secret)).
+      then(id => {
+        userId = id;
+        friendId = userId + 1;
+      }).
+      then(() => repo.createNote('hello', userId)).
+      then(id => noteId = id).
+      then(() => repo.userSharesWith(userId, friendId)).
+      then(() => repo.userSharesWith(userId, friendId)).
+      then(() => repo.getNote(noteId, userId)).
+      then(note => expect(note.id).toEqual(noteId)).
+      then(() => repo.userBlocks(userId, friendId)).
+      then(note => expect(note).toBeUndefined()).
+      then(() => repo.userBlocks(userId, friendId)).
+      then(() => repo.close()).
+      catch(e => {
+        repo.close();
+        throw e;
+      });
+  });
+
   test('Uses secrets', () => {
     const repo = new Repo({});
     const userName = 'Jonathan';
