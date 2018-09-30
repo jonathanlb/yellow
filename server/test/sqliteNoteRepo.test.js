@@ -16,14 +16,18 @@ describe('Test SqLite3 note repository', () => {
 
   test('Creates and retrieves notes', () => {
     const repo = new Repo({});
-    const user = 1;
+    const userName = 'Jonathan';
+    const secret = 's3cr3T';
+    let userId = -1;
     const content = 'Hello, World!';
 
     return repo.setup().
-      then(() => repo.createNote(content, user)).
-      then(id => repo.getNote(id, user)).
+      then(() => repo.createUser(userName, secret)).
+      then(id => userId = id).
+      then(() => repo.createNote(content, userId)).
+      then(id => repo.getNote(id, userId)).
       then(note => {
-        expect(note.author).toBe(user);
+        expect(note.author).toBe(userId);
         expect(note.id).toBeDefined();
         expect(note.created).toBeDefined();
         expect(note.content).toEqual(content);
@@ -111,9 +115,11 @@ describe('Test SqLite3 note repository', () => {
 
   test('Searches notes', () => {
     const repo = new Repo({});
-    const userId = 1;
+    let userId;
 
     return repo.setup().
+      then(() => repo.createUser('Jonathan', 's3cr3T')).
+      then(id => userId = id).
       then(() => repo.createNote('foo', userId)).
       then(() => repo.createNote('bar', userId)).
       then(() => repo.createNote('baz', userId)).
@@ -129,13 +135,12 @@ describe('Test SqLite3 note repository', () => {
   test('Searches notes by author', () => {
     const repo = new Repo({});
     const userName = 'Jonathan';
-    const secret = 's3cr3T';
     let userId, otherUserId;
 
     return repo.setup().
       then(() => repo.createUser('Mattie', 'woof!')).
       then(id => otherUserId = id).
-      then(() => repo.createUser(userName, secret)).
+      then(() => repo.createUser(userName, 's3cr3T')).
       then(id => userId = id).
       then(() => repo.createNote('woof', otherUserId)).
       then(() => repo.createNote('hello', userId)).
@@ -154,13 +159,12 @@ describe('Test SqLite3 note repository', () => {
   test('Protects note default/protected privacy', () => {
     const repo = new Repo({});
     const userName = 'Jonathan';
-    const secret = 's3cr3T';
     var noteId = -1;
     var userId = -1;
     var friendId = -1;
 
     return repo.setup().
-      then(() => repo.createUser(userName, secret)).
+      then(() => repo.createUser(userName, 's3cr3T')).
       then(id => {
         userId = id;
         friendId = userId + 1;
@@ -186,25 +190,26 @@ describe('Test SqLite3 note repository', () => {
   test('Protects note privacy', () => {
     const repo = new Repo({});
     const userName = 'Jonathan';
-    const secret = 's3cr3T';
-    var noteId = -1;
-    var userId = -1;
-    var friendId = -1;
+    let noteId, userId, friendId;
 
     return repo.setup().
-      then(() => repo.createUser(userName, secret)).
-      then(id => {
-        userId = id;
-        friendId = userId + 1;
-      }).
+      then(() => repo.createUser(userName, 's3cr3T')).
+      then(id => userId = id).
+      then(() => repo.createUser(`Friend of ${userName}`, 'shhh3cr3T')).
+      then(id => friendId = id).
       then(() => repo.createNote('hello', userId)).
       then(id => noteId = id).
       then(() => repo.setNotePrivate(noteId, userId)).
-      then(() => repo.userSharesWith(userId, friendId)).
       then(() => repo.getNote(noteId, userId)).
       then(note => expect(note.id).toEqual(noteId)).
       then(() => repo.getNote(noteId, friendId)).
       then(note => expect(note).toBeUndefined()).
+      then(() => repo.userSharesWith(userId, friendId)).
+      then(() => repo.getNote(noteId, friendId)).
+      then(note => expect(note).toBeUndefined()).
+      then(() => repo.setNoteProtected(noteId, userId)).
+      then(() => repo.getNote(noteId, friendId)).
+      then(note => expect(note.id).toEqual(noteId)).
       then(() => repo.close()).
       catch(e => {
         repo.close();

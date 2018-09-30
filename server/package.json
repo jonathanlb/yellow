@@ -4,6 +4,7 @@
   "description": "Back end server for yellow note collection",
   "main": "src/index.js",
   "scripts": {
+    "coverage": "jest --coverage",
     "lint": "eslint --fix src/*.js",
     "start": "node src/index.js",
     "test": "jest"

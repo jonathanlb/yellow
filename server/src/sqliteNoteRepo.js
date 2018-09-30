@@ -32,31 +32,6 @@ module.exports = class SqliteNoteRepo {
   }
 
   /**
-   * Grant read access of the note to the user.
-   *
-   * @param note object containing note row fields.
-   * @param userId integer user id of the prospective reader.
-   */
-  async allowAccess(note, userId) {
-    debug('allowAccess', note.id, note.author, userId, note.privacy);
-    if (note.author === userId) {
-      return true;
-    } if (note.privacy === publicAccess) {
-      return true;
-    } if (note.privacy === protectedAccess) {
-      const query = `SELECT user FROM sharing WHERE user=${note.author} AND sharesWith=${userId}`;
-      debug('allowAccess', query);
-      return this.db.allAsync(query)
-        .then((result) => {
-          debug('allowAccess', result);
-          return result.length > 0;
-        });
-    }
-    errors('Unknown access mode:', note.privacy, 'noteId:', note.id);
-    return false;
-  }
-
-  /**
    * Check the secret against the user id.
    * TODO: add salt
    */
@@ -83,7 +58,7 @@ module.exports = class SqliteNoteRepo {
     debug('createNote', content, user);
     const escapedContent = utils.escapeQuotes(content);
     const epochS = utils.getEpochSeconds();
-    const query = `INSERT INTO notes(author, content, created, privacy) values (${user}, '${escapedContent}', ${epochS}, ${defaultAccess})`;
+    const query = `INSERT INTO notes(author, content, created, privacy) VALUES (${user}, '${escapedContent}', ${epochS}, ${defaultAccess})`;
     debug(query);
     return this.db.runAsync(query)
       .then(() => this.lastId());
@@ -96,10 +71,18 @@ module.exports = class SqliteNoteRepo {
     debug('createUser', userName);
     const escapedUserName = utils.escapeQuotes(userName);
     const escapedSecret = utils.escapeQuotes(secret);
-    const query = `INSERT INTO users(userName, secret) values ('${escapedUserName}', '${escapedSecret}')`;
+    let query = `INSERT INTO users(userName, secret) VALUES ('${escapedUserName}', '${escapedSecret}') `;
+    let result;
     debug(query);
     return this.db.runAsync(query)
-      .then(() => this.lastId());
+      .then(() => this.lastId())
+      .then((id) => {
+        result = id;
+        query = `INSERT INTO sharing (user, sharesWith) VALUES (${result}, ${result})`;
+        debug(query);
+        return this.db.runAsync(query);
+      })
+      .then(() => result);
   }
 
   /**
@@ -107,18 +90,15 @@ module.exports = class SqliteNoteRepo {
    */
   async getNote(noteId, user) {
     debug('getNote', noteId, user);
-    const query = `SELECT author, content, created, ROWID as id, privacy, renderHint FROM notes WHERE ROWID = ${noteId}`;
+    const query = 'SELECT DISTINCT notes.author, notes.content, notes.created, notes.ROWID as id, notes.privacy, notes.renderHint '
+      + `FROM notes, sharing WHERE id=${noteId} `
+      + `AND (notes.privacy=${publicAccess} OR author=${user} OR (notes.privacy=${protectedAccess} AND sharing.user=notes.author AND sharing.sharesWith=${user}))`;
     debug(query);
     return this.db.allAsync(query)
       .then((x) => {
         debug('GET', x);
         if (x.length > 0) {
-          const [note] = x;
-          return this.allowAccess(note, user)
-            .then((granted) => {
-              debug('getNote granted', granted, user, note.id);
-              return granted ? note : undefined;
-            });
+          return x[0];
         }
         return undefined;
       });
@@ -177,10 +157,9 @@ module.exports = class SqliteNoteRepo {
 
   /**
    * Return a promise to an array of note ids.
-   * @param searchTerms the substring completing the SQLite3 search query
-   *  "SELECT rowid FROM notes WHERE ..."
-   * TODO: check permissions.  Currently the content is protected, but search
-   *       results (note ids) are not.
+   * @param searchTerms array whose first element matches a content search,
+   *  and subsequent elements are pairs of keywords and terms to match, e.g.
+   *  [ '%todos%', ['author': 'Bilbo'], ['before': '1914-08-07'] ]
    */
   async searchNote(searchTerms, user) {
     debug('searchNote', searchTerms, user);
@@ -202,7 +181,10 @@ module.exports = class SqliteNoteRepo {
       const contentQueryAnd = contentQuery.length && conditions.length
         ? `${contentQuery} AND`
         : contentQuery;
-      const query = `SELECT rowid FROM notes WHERE ${contentQueryAnd} ${conditions.join(' AND ')} ORDER BY rowid DESC LIMIT ${queryLimit}`;
+      const query = `SELECT DISTINCT notes.rowid FROM notes, sharing WHERE ${contentQueryAnd} `
+       + `${conditions.join(' AND ')} `
+       + `AND (privacy=${publicAccess} OR author=${user} OR (privacy=${protectedAccess} AND user=author AND sharesWith=${user})) `
+       + `ORDER BY notes.rowid DESC LIMIT ${queryLimit}`;
       debug(query);
       return this.db.allAsync(query)
         .then(result => result.map(entry => entry.rowid));
