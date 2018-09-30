@@ -49,11 +49,11 @@ module.exports = (cardInfo) => {
   };
 
   return yo`
-    <div class="${cardClass}" id="${cardId}"
-      onmousedown=${mouseDown}
-      onmousemove=${mouseMove}
-      onmouseup=${mouseUp} >
-      <div class="cardHeader" >
+    <div class="${cardClass}" id="${cardId}" >
+      <div class="cardHeader"
+        onmousedown=${mouseDown}
+        onmousemove=${mouseMove}
+        onmouseup=${mouseUp} >
         <span class="cardAuthor" >${cardInfo.author}</span>
         <span class="cardDate" >${timeStr} <a onclick=${closeCard}>X</a></span>
       </div>
