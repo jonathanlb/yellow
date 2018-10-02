@@ -1,4 +1,4 @@
-const debug = require('debug')('cards');
+// const debug = require('debug')('cards');
 const renderCard = require('./card');
 
 module.exports = (cardsInfo) => {
@@ -15,18 +15,16 @@ module.exports = (cardsInfo) => {
   setTimeout(() => {
     result.forEach((card) => {
       // Don't try to set element.offsetXXX; stick with style.
+      // Don't update card, it's usually no longer valid.
+      const elt = document.getElementById(card.id);
       if (lastY === undefined) {
-        // eslint-disable-next-line no-param-reassign
-        card.style.top = `${card.offsetTop}px`;
-        lastY = card.offsetTop + card.offsetHeight + margin;
+        elt.style.top = `${elt.offsetTop}px`;
+        lastY = elt.offsetTop + elt.offsetHeight + margin;
       } else {
-        // eslint-disable-next-line no-param-reassign
-        card.style.top = `${lastY}px`;
-        lastY += card.offsetHeight + margin;
+        elt.style.top = `${lastY}px`;
+        lastY += elt.offsetHeight + margin;
       }
-      // eslint-disable-next-line no-param-reassign
-      card.style.left = `${card.offsetLeft}px`;
-      debug('delayed', lastY, card.offsetHeight, card.offsetTop, card);
+      elt.style.left = `${elt.offsetLeft}px`;
     });
   }, 100);
   return result;

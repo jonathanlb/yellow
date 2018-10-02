@@ -28,7 +28,7 @@ label {
 }
 
 .cardContainer {
-	/* background: yellow; */
+	background: aliceblue;
 	border-color: yellow;
 	border-style: solid;
 	border-width: 5px;
@@ -62,6 +62,13 @@ label {
 
 .navbarItem {
 	background: yellow;
+	font-family: cursive;
+	font-style: italic;
+	margin: 10px;
+	padding: 5px;
+}
+
+.navbarUserName {
 	font-family: cursive;
 	font-style: italic;
 	margin: 10px;

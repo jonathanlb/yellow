@@ -1,12 +1,23 @@
 const header = require('../views/header');
 const Views = require('../views/views');
 
+const loginName = 'Some User';
+
 describe('Header component', () => {
   test('renders', () => {
-    const elt = header({});
+    const elt = header({
+      userName: loginName,
+    });
     expect(elt.innerHTML.includes('Post')).toBe(true);
     expect(elt.innerHTML.includes('Search')).toBe(true);
     expect(elt.innerHTML.includes('Logout')).toBe(true);
+  });
+
+  test('renders blank navbar before login', () => {
+    const elt = header({});
+    expect(elt.innerHTML.includes('Post')).toBe(false);
+    expect(elt.innerHTML.includes('Search')).toBe(false);
+    expect(elt.innerHTML.includes('Logout')).toBe(false);
   });
 
   test('clears', () => {
@@ -14,6 +25,7 @@ describe('Header component', () => {
     const app = {
       discardNotes: () => undefined,
       render: () => { clicked = true; },
+      userName: loginName,
     };
 
     document.createElement('body');
@@ -30,6 +42,7 @@ describe('Header component', () => {
     let view = -1;
     const app = {
       render: (viewNum) => { view = viewNum; },
+      userName: loginName,
     };
 
     document.createElement('body');
@@ -46,6 +59,7 @@ describe('Header component', () => {
     let view = -1;
     const app = {
       render: (viewNum) => { view = viewNum; },
+      userName: loginName,
     };
 
     document.createElement('body');
@@ -62,6 +76,7 @@ describe('Header component', () => {
     let clicked = false;
     const app = {
       logout: () => { clicked = true; },
+      userName: loginName,
     };
 
     document.createElement('body');
