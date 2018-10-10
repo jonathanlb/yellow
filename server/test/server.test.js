@@ -3,9 +3,9 @@ const request = require('supertest');
 const Repo = require('./inMemoryNoteRepo');
 const Server = require('../src/server');
 
-function createServer(app) {
+function createServer(app, opts) {
   const repo = new Repo();
-  const server = new Server(app, repo);
+  const server = new Server(app, repo, opts || { routeUserCreate: true });
   return server.setup();
 }
 
@@ -134,6 +134,17 @@ describe('Test user routing', () => {
         expect(response.text).toEqual('0');
       });
   });
+
+  test('Disables user create route', () => {
+    const app = express();
+    const user = encodeURIComponent('The "Real" Twit');
+    const secret = 'sEcr3t';
+
+    return createServer(app, {}).
+      then(() => request(app).get(`/user/create/${secret}/${user}`)).
+      then((response) =>
+        expect(response.statusCode).toBe(404));
+  })
 
   test('Handles user bootstrap get success', () => {
     const app = express();

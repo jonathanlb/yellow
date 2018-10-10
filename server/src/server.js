@@ -3,9 +3,10 @@ const errors = require('debug')('server:error');
 const express = require('express');
 
 module.exports = class Server {
-  constructor(router, repo) {
+  constructor(router, repo, opts) {
     this.router = router;
     this.repo = repo;
+    this.opts = opts || {};
 
     ['checkSecret', 'checkUserLookupSecret']
       .forEach((m) => { this[m] = this[m].bind(this); });
@@ -86,7 +87,9 @@ module.exports = class Server {
     this.setupNoteDelete();
     this.setupNoteGet();
     this.setupNoteSearch();
-    this.setupUserCreate();
+    if (this.opts.routeUserCreate) {
+      this.setupUserCreate();
+    }
     this.setupUserIdGet();
 
     return this.repo.setup()
@@ -173,6 +176,7 @@ module.exports = class Server {
 
   /**
    * Install the logic to create a user.
+   * Only install this endpoint for development.
    * TODO: handle redundant requests, permissions to create.
    */
   setupUserCreate() {
