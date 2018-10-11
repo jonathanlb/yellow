@@ -95,6 +95,10 @@ module.exports = class App {
       });
   }
 
+  async getFriends() {
+    return Promise.resolve(['Bob', 'Carol', 'Eddy']);
+  }
+
   async loadCard(id) {
     debug('loadCard', id);
     const cmd = `${this.serverPrefix}note/get/${this.secret}/${this.userId}/${id}`;
@@ -195,6 +199,14 @@ module.exports = class App {
 
   async setup() {
     this.render();
+  }
+
+  async shareWith(friendName) {
+    return this.getFriends()
+      .then((f) => {
+        f.push(friendName);
+        return f;
+      });
   }
 
   unloadCard(cardId) {

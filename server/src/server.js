@@ -83,6 +83,7 @@ module.exports = class Server {
   async setup() {
     this.router.use(express.static('public'));
     this.setupIndex();
+    this.setupNoteAccess();
     this.setupNoteCreate();
     this.setupNoteDelete();
     this.setupNoteGet();
@@ -91,6 +92,7 @@ module.exports = class Server {
       this.setupUserCreate();
     }
     this.setupUserIdGet();
+    this.setupUserShareWith();
 
     return this.repo.setup()
       .then(() => this);
@@ -102,6 +104,22 @@ module.exports = class Server {
       res.status(200).send('Hello');
       return Promise.resolve(next);
     });
+  }
+
+  setupNoteAccess() {
+    this.router.get(
+      '/note/setAccess/:secret/:user/:note/:access',
+      (req, res) => this.checkSecret(req.params, res, () => {
+        const userId = parseInt(req.params.user, 10);
+        const noteId = parseInt(req.params.note, 10);
+        const accessMode = parseInt(req.params.access, 10);
+
+        return this.repo.setNoteAccess(noteId, userid, accessMode)
+          .then(() => {
+            debug('note access', noteId, accessMode);
+            res.status(200).send(id.toString());
+          });
+      }));
   }
 
   setupNoteCreate() {
@@ -226,6 +244,41 @@ module.exports = class Server {
         });
       },
     );
+  }
+
+  /**
+   * Install logic to allow users to share and revoke sharing.
+   */
+  setupUserShareWith() {
+    this.router.get(
+      '/user/blocks/:secret/:user/:otherName',
+      (req, res) => this.checkSecret(
+        req.params,
+        res,
+        () => {
+          const userId = parseInt(req.params.user, 10);
+          const otherName = Server.parseRequest(req.params, req.params.otherName);
+          return this.repo.getUserId(otherName)
+            .then((otherId) => {
+              return this.repo.userBlocks(userId, otherId);
+            });
+        }
+      ));
+
+    this.router.get(
+      '/user/shares/:secret/:user/:otherName',
+      (req, res) => this.checkSecret(
+        req.params,
+        res,
+        () => {
+          const userId = parseInt(req.params.user, 10);
+          const otherName = Server.parseRequest(req.params, req.params.otherName);
+          return this.repo.getUserId(otherName)
+            .then((otherId) => {
+              return this.repo.userSharesWith(userId, otherId);
+            });
+        }
+      ));
   }
 
   /**

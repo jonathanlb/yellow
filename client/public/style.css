@@ -62,17 +62,21 @@ label {
 
 .navbarItem {
 	background: yellow;
+	display: inline-block;
 	font-family: cursive;
 	font-style: italic;
 	margin: 10px;
-	padding: 5px;
+	padding: 6px;
+	vertical-align: top;
 }
 
 .navbarUserName {
+	display: inline-block;
 	font-family: cursive;
 	font-style: italic;
 	margin: 10px;
 	padding: 5px;
+	vertical-align: top;
 }
 
 .navbarItem:hover {
