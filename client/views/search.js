@@ -11,7 +11,7 @@ module.exports = (app) => {
 
   return yo`
     <div>
-      <label for="searchField">Search:</label>
+      <label for="${searchField}">Search:</label>
       <input type="text" id="${searchField}"
         onkeyup=${e => (e.key === 'Enter') && doSearch()} />
       <button onclick=${doSearch} >OK</button>

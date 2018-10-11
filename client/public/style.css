@@ -13,6 +13,8 @@ header {
 	line-height: 10px;
 	margin: 10px;
 	margin-bottom: 15px;
+	position: relative; /* to occlude cards */
+	z-index: 10;
 }
 
 label {
@@ -68,6 +70,16 @@ label {
 	margin: 10px;
 	padding: 6px;
 	vertical-align: top;
+}
+
+.navbarItem li {
+  line-height: 1.0;
+  list-style-position: outside;
+	list-style-type: none;
+}
+
+.navbarItem ul {
+  padding-left: 1.2em;
 }
 
 .navbarUserName {

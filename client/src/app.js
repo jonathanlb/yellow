@@ -96,7 +96,10 @@ module.exports = class App {
   }
 
   async getFriends() {
-    return Promise.resolve(['Bob', 'Carol', 'Eddy']);
+    const cmd = `${this.serverPrefix}user/sharesWith/${this.secret}/${this.userId}`;
+    debug('getFriends');
+    return fetch(cmd)
+      .then(response => response.json());
   }
 
   async loadCard(id) {
@@ -146,6 +149,12 @@ module.exports = class App {
         errors('Cannot look up user name', userName);
         return this.render(Views.login);
       });
+  }
+
+  async removeFriend(friendName) {
+    const cmd = `${this.serverPrefix}user/blocks/${this.secret}/${this.userId}/${friendName}`;
+    debug('unfriend', friendName);
+    return fetch(cmd);
   }
 
   render(viewOpt) {
@@ -202,11 +211,9 @@ module.exports = class App {
   }
 
   async shareWith(friendName) {
-    return this.getFriends()
-      .then((f) => {
-        f.push(friendName);
-        return f;
-      });
+    const cmd = `${this.serverPrefix}user/shares/${this.secret}/${this.userId}/${friendName}`;
+    debug('shareWith', friendName);
+    return fetch(cmd);
   }
 
   unloadCard(cardId) {

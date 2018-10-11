@@ -271,6 +271,34 @@ describe('Test SqLite3 note repository', () => {
       });
   });
 
+  test('Shows sharing users', () => {
+    const repo = new Repo({});
+    const userName = 'Jonathan';
+    const anotherUserName = 'Mattie';
+    var userId = -1;
+    var anotherUserId = -1;
+
+    return repo.setup().
+      then(() => repo.createUser(userName, 's3cr3T')).
+      then(id => userId = id).
+      then(() => repo.createUser(anotherUserName, 's3cr3T')).
+      then(id => anotherUserId = id).
+      then(() => repo.getUserSharesWith(userId)).
+      then((result) => expect(result).toEqual([])).
+      then(() => repo.getUserSharesWith(anotherUserId)).
+      then((result) => expect(result).toEqual([])).
+      then(() => repo.userSharesWith(userId, anotherUserId)).
+      then(() => repo.getUserSharesWith(anotherUserId)).
+      then((result) => expect(result).toEqual([])).
+      then(() => repo.getUserSharesWith(userId)).
+      then((result) => expect(result).toEqual([anotherUserName])).
+      then(() => repo.close()).
+      catch(e => {
+        repo.close();
+        throw e;
+      });
+  });
+
   test('Uses secrets', () => {
     const repo = new Repo({});
     const userName = 'Jonathan';

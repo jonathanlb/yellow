@@ -114,12 +114,13 @@ module.exports = class Server {
         const noteId = parseInt(req.params.note, 10);
         const accessMode = parseInt(req.params.access, 10);
 
-        return this.repo.setNoteAccess(noteId, userid, accessMode)
+        return this.repo.setNoteAccess(noteId, userId, accessMode)
           .then(() => {
             debug('note access', noteId, accessMode);
-            res.status(200).send(id.toString());
+            res.status(200).send('');
           });
-      }));
+      }),
+    );
   }
 
   setupNoteCreate() {
@@ -259,11 +260,11 @@ module.exports = class Server {
           const userId = parseInt(req.params.user, 10);
           const otherName = Server.parseRequest(req.params, req.params.otherName);
           return this.repo.getUserId(otherName)
-            .then((otherId) => {
-              return this.repo.userBlocks(userId, otherId);
-            });
-        }
-      ));
+            .then(otherId => this.repo.userBlocks(userId, otherId))
+            .then(() => res.status(200).send(''));
+        },
+      ),
+    );
 
     this.router.get(
       '/user/shares/:secret/:user/:otherName',
@@ -274,11 +275,26 @@ module.exports = class Server {
           const userId = parseInt(req.params.user, 10);
           const otherName = Server.parseRequest(req.params, req.params.otherName);
           return this.repo.getUserId(otherName)
-            .then((otherId) => {
-              return this.repo.userSharesWith(userId, otherId);
+            .then(otherId => this.repo.userSharesWith(userId, otherId))
+            .then(() => res.status(200).send(''));
+        },
+      ),
+    );
+
+    this.router.get(
+      '/user/sharesWith/:secret/:user',
+      (req, res) => this.checkSecret(
+        req.params,
+        res,
+        () => {
+          const userId = parseInt(req.params.user, 10);
+          return this.repo.getUserSharesWith(userId)
+            .then((result) => {
+              res.status(200).send(result);
             });
-        }
-      ));
+        },
+      ),
+    );
   }
 
   /**

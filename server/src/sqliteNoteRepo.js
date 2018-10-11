@@ -136,6 +136,16 @@ module.exports = class SqliteNoteRepo {
       });
   }
 
+  async getUserSharesWith(userId) {
+    const query = 'SELECT DISTINCT users.userName FROM sharing, users '
+      + `WHERE sharing.user = ${userId} AND users.ROWID = sharing.sharesWith AND users.ROWID <> ${userId}`;
+    return this.db.allAsync(query)
+      .then(results => results.map((x) => {
+        debug('getUserSharesWith', userId, x);
+        return x.userName;
+      }));
+  }
+
   async lastId() {
     return this.db.allAsync('SELECT last_insert_rowid()')
       .then((x) => {
