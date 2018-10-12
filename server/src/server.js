@@ -118,6 +118,9 @@ module.exports = class Server {
           .then(() => {
             debug('note access', noteId, accessMode);
             res.status(200).send('');
+          })
+          .catch((e) => {
+            res.status(400).send(e.message);
           });
       }),
     );
@@ -261,7 +264,8 @@ module.exports = class Server {
           const otherName = Server.parseRequest(req.params, req.params.otherName);
           return this.repo.getUserId(otherName)
             .then(otherId => this.repo.userBlocks(userId, otherId))
-            .then(() => res.status(200).send(''));
+            .then(() => res.status(200).send(''))
+            .catch(e => res.status(400).send(e.message));
         },
       ),
     );
@@ -276,7 +280,8 @@ module.exports = class Server {
           const otherName = Server.parseRequest(req.params, req.params.otherName);
           return this.repo.getUserId(otherName)
             .then(otherId => this.repo.userSharesWith(userId, otherId))
-            .then(() => res.status(200).send(''));
+            .then(() => res.status(200).send(''))
+            .catch(e => res.status(400).send(e.message));
         },
       ),
     );
@@ -289,9 +294,8 @@ module.exports = class Server {
         () => {
           const userId = parseInt(req.params.user, 10);
           return this.repo.getUserSharesWith(userId)
-            .then((result) => {
-              res.status(200).send(result);
-            });
+            .then(result => res.status(200).send(result))
+            .catch(e => res.status(400).send(e.message));
         },
       ),
     );

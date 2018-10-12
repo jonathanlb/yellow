@@ -93,6 +93,26 @@ describe('Test note routing', () => {
       });
   });
 
+  test('Handles note privacy updates', () => {
+    const app = express();
+    return createServer(app).
+      then(() => request(app).get(`/note/setAccess/sEcr3t/19/31/0`)).
+      then(response => {
+        expect(response.statusCode).toBe(200);
+        expect(response.text).toEqual('');
+      });
+  });
+
+  test('Handles note privacy update errors around malformed user id', () => {
+    const app = express();
+    return createServer(app).
+      then(() => request(app).get(`/note/setAccess/sEcr3t/nineteen/31/0`)).
+      then(response => {
+        expect(response.statusCode).toBe(400);
+        expect(response.text).toEqual('invalid user id: NaN');
+      });
+  });
+
   test('Handles note search', () => {
     const app = express();
     const rawContent = '<h1>My Day</h1><p>Some note</p>';
@@ -193,6 +213,74 @@ describe('Test user routing', () => {
       then(() => request(app).get(`/user/get/sEcr3t/1/noobe`)).
       then(response => {
         expect(response.statusCode).toBe(404);
+      });
+  });
+
+  test('Handles user block', () => {
+    const app = express();
+    const userName = encodeURIComponent('The "Real" Twit');
+
+    return createServer(app).
+      then(() => request(app).get(`/user/blocks/secret/19/${userName}`)).
+      then(response => {
+        expect(response.statusCode).toBe(200);
+        expect(response.text).toEqual('');
+      });
+  });
+
+  test('Handles user block error from bad user id', () => {
+    const app = express();
+    const userName = encodeURIComponent('The "Real" Twit');
+
+    return createServer(app).
+      then(() => request(app).get(`/user/blocks/secret/nineteen/${userName}`)).
+      then(response => {
+        expect(response.statusCode).toBe(400);
+        expect(response.text).toEqual('invalid userId: NaN');
+      });
+  });
+
+  test('Handles user share', () => {
+    const app = express();
+    const userName = encodeURIComponent('My #1 Friend');
+
+    return createServer(app).
+      then(() => request(app).get(`/user/shares/secret/19/${userName}`)).
+      then(response => {
+        expect(response.statusCode).toBe(200);
+        expect(response.text).toEqual('');
+      });
+  });
+
+  test('Handles user share error from bad user id', () => {
+    const app = express();
+    const userName = encodeURIComponent('My #1 Friend');
+
+    return createServer(app).
+      then(() => request(app).get(`/user/shares/secret/nineteen/${userName}`)).
+      then(response => {
+        expect(response.statusCode).toBe(400);
+        expect(response.text).toEqual('invalid userId: NaN');
+      });
+  });
+
+  test('Handles user get sharing partners', () => {
+    const app = express();
+    return createServer(app).
+      then(() => request(app).get(`/user/sharesWith/secret/19`)).
+      then(response => {
+        expect(response.statusCode).toBe(200);
+        expect(response.text).toEqual('[]');
+      });
+  });
+
+  test('Handles user get sharing partners error from malformed user id', () => {
+    const app = express();
+    return createServer(app).
+      then(() => request(app).get(`/user/sharesWith/secret/nineteen`)).
+      then(response => {
+        expect(response.statusCode).toBe(400);
+        expect(response.text).toEqual('invalid userId: NaN');
       });
   });
 });

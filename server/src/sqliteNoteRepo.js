@@ -136,6 +136,9 @@ module.exports = class SqliteNoteRepo {
       });
   }
 
+  /**
+   * Return the list of names that the user shares with.
+   */
   async getUserSharesWith(userId) {
     const query = 'SELECT DISTINCT users.userName FROM sharing, users '
       + `WHERE sharing.user = ${userId} AND users.ROWID = sharing.sharesWith AND users.ROWID <> ${userId}`;

@@ -26,6 +26,13 @@ describe('Query parser', () => {
       .toEqual('content like \'%ish\'');
   });
 
+  it('cannot handle object conditions', () => {
+    expect(() => {
+      const result = Query.condition('ish', {foo: 'bar', baz: true});
+      console.error('Expecting error, but got', result);
+    }).toThrowError(/cannot interpret/);
+  })
+
   it('handles content only queries', () => {
     const query = 'where is my phone';
     const result = Query.parse(query);

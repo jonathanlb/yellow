@@ -1,3 +1,5 @@
+Postgres use not supported until API solidifies, prototyping on SqLite3.
+
 ## Use with Postgres
 - Clean out data/ directory.
 - ```initdb -D data```

@@ -18,6 +18,7 @@ module.exports = class InMemoryRepo {
       'getUserName',
       'removeNote',
       'searchNote',
+      'setNoteAccess',
       'setNotePrivate',
       'setNoteProtected',
       'setNotePublic',
@@ -99,6 +100,16 @@ module.exports = class InMemoryRepo {
   }
 
   /**
+   * Return the list of names that the user shares with.
+   */
+  async getUserSharesWith(userId) {
+    if (typeof userId != 'number' || isNaN(userId)) {
+      throw new Error(`invalid userId: ${userId}`);
+    }
+    return [];
+  }
+
+  /**
    * Delete note content, returning a promise of success.
    */
   async removeNote(noteId, user) {
@@ -123,16 +134,28 @@ module.exports = class InMemoryRepo {
     }
   }
 
-  async setNotePrivate(noteId, user) {
+  async setNoteAccess(noteId, user, mode) {
+    if (typeof noteId != 'number' || isNaN(noteId)) {
+      throw new Error(`invalid noteId: ${noteId}`);
+    }
+    if (typeof user != 'number' || isNaN(user)) {
+      throw new Error(`invalid user id: ${user}`);
+    }
+    if (typeof mode != 'number' || isNaN(mode) || mode > 2 || mode < 0) {
+      throw new Error(`invalid access mode: ${mode}`);
+    }
+  }
 
+  async setNotePrivate(noteId, user) {
+    return this.setNoteAccess(noteId, user, 0);
   }
 
   async setNoteProtected(noteId, user) {
-
+    return this.setNoteAccess(noteId, user, 1);
   }
 
   async setNotePublic(noteId, user) {
-
+    return this.setNoteAccess(noteId, user, 2);
   }
 
   async setup() {
@@ -140,10 +163,20 @@ module.exports = class InMemoryRepo {
   }
 
   async userBlocks(userId, friendId) {
-
+    if (typeof userId != 'number' || isNaN(userId)) {
+      throw new Error(`invalid userId: ${userId}`);
+    }
+    if (typeof friendId != 'number' || isNaN(friendId)) {
+      throw new Error(`invalid friendId: ${friendId}`);
+    }
   }
 
   async userSharesWith(userId, friendId) {
-
+    if (typeof userId != 'number' || isNaN(userId)) {
+      throw new Error(`invalid userId: ${userId}`);
+    }
+    if (typeof friendId != 'number' || isNaN(friendId)) {
+      throw new Error(`invalid friendId: ${friendId}`);
+    }
   }
 }
