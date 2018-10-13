@@ -86,9 +86,9 @@ describe('Test Postgres note repository', () => {
     const repo = new Repo();
 		let query;
 		repo.db = {
-			oneOrNone: (q) => {
+			oneOrNone: async (q) => {
 				query = q;
-				return Promise.resolve({userName: 'bilbo'});
+				return Promise.resolve({ username: 'bilbo' });
 			}
 		};
 

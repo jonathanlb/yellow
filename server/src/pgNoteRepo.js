@@ -2,7 +2,7 @@ const debug = require('debug')('pgRepo');
 const errors = require('debug')('pgRepo:error');
 const os = require('os');
 const pg = require('pg-promise');
-const utils = require('./dbCommon');
+const dbs = require('./dbCommon');
 
 /**
  * Note repository upon postgres.
@@ -27,6 +27,7 @@ module.exports = class PgRepo {
     return true;
   }
 
+  // eslint-disable-next-line class-methods-use-this
   close() {
   }
 
@@ -36,8 +37,8 @@ module.exports = class PgRepo {
    */
   async createNote(content, user) {
     debug('createNote', content, user);
-    const escapedContent = utils.escapeQuotes(content);
-    const epochS = utils.getEpochSeconds();
+    const escapedContent = dbs.escapeQuotes(content);
+    const epochS = dbs.getEpochSeconds();
     const query = `INSERT INTO notes(author, content, created) values (${user}, '${escapedContent}', ${epochS}) RETURNING id`;
     debug(query);
     return this.db.one(query)
@@ -46,8 +47,8 @@ module.exports = class PgRepo {
 
   async createUser(userName, secret) {
     debug('createUser', userName);
-    const escapedUserName = utils.escapeQuotes(userName);
-    const escapedSecret = utils.escapeQuotes(secret);
+    const escapedUserName = dbs.escapeQuotes(userName);
+    const escapedSecret = dbs.escapeQuotes(secret);
     const query = `INSERT INTO users(userName, secret) values ('${escapedUserName}', '${escapedSecret}') RETURNING id`;
     debug(query);
     return this.db.one(query)
@@ -66,7 +67,7 @@ module.exports = class PgRepo {
 
   async getUserId(userName) {
     debug('getUserId', userName);
-    const query = `SELECT id FROM users WHERE userName = '${utils.escapeQuotes(userName)}'`;
+    const query = `SELECT id FROM users WHERE userName = '${dbs.escapeQuotes(userName)}'`;
     debug(query);
     return this.db.oneOrNone(query)
       .then(result => result.id);
@@ -78,6 +79,13 @@ module.exports = class PgRepo {
     debug(query);
     return this.db.oneOrNone(query)
       .then(result => result.username); // pg clobbers column-name case.
+  }
+
+  /**
+	 * Return the list of names that the user shares with.
+	 */
+  async getUserSharesWith(userId) {
+    throw new Error('getUserSharesWith not implemented');
   }
 
   /**
@@ -100,6 +108,22 @@ module.exports = class PgRepo {
       .then(results => results.map(row => row.id));
   }
 
+  async setNoteAccess(noteId, user, accessMode) {
+    throw new Error('setNoteAccess not implemented');
+  }
+
+  async setNotePrivate(noteId, user) {
+    throw new Error('setNotePrivate not implemented');
+  }
+
+  async setNoteProtected(noteId, user) {
+    throw new Error('setNoteProtected not implemented');
+  }
+
+  async setNotePublic(noteId, user) {
+    throw new Error('setNotePublic not implemented');
+  }
+
   async setup() {
     this.db = pg({})(
       `postgres://${this.dbConfig.user}@${this.dbConfig.host}:${this.dbConfig.port}/${this.dbConfig.database}`,
@@ -113,5 +137,13 @@ module.exports = class PgRepo {
         debug('setup', createUsers);
         return this.db.none(createUsers);
       });
+  }
+
+  async userBlocks(userId, friendId) {
+    throw new Error('userBlocks not implemented');
+  }
+
+  async userSharesWith(userId, friendId) {
+    throw new Error('userSharesWith not implemented');
   }
 };

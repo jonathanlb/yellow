@@ -1,14 +1,8 @@
 const debug = require('debug')('sqliteNoteRepo');
 const errors = require('debug')('sqliteNoteRepo:error');
 const sqlite3 = require('sqlite3-promise').verbose();
-const utils = require('./dbCommon');
+const dbs = require('./dbCommon');
 const Query = require('./queryParser');
-
-const queryLimit = 6;
-const privateAccess = 0;
-const protectedAccess = 1;
-const publicAccess = 2;
-const defaultAccess = protectedAccess;
 
 /**
  * Note repository upon SqLite3.
@@ -40,7 +34,7 @@ module.exports = class SqliteNoteRepo {
     return this.db.allAsync(query)
       .then((result) => {
         const ok = result.length > 0
-          && result[0].secret === utils.escapeQuotes(secret);
+          && result[0].secret === dbs.escapeQuotes(secret);
         debug('checkSecret', ok);
         return ok;
       });
@@ -56,9 +50,9 @@ module.exports = class SqliteNoteRepo {
    */
   async createNote(content, user) {
     debug('createNote', content, user);
-    const escapedContent = utils.escapeQuotes(content);
-    const epochS = utils.getEpochSeconds();
-    const query = `INSERT INTO notes(author, content, created, privacy) VALUES (${user}, '${escapedContent}', ${epochS}, ${defaultAccess})`;
+    const escapedContent = dbs.escapeQuotes(content);
+    const epochS = dbs.getEpochSeconds();
+    const query = `INSERT INTO notes(author, content, created, privacy) VALUES (${user}, '${escapedContent}', ${epochS}, ${dbs.DEFAULT_ACCESS})`;
     debug(query);
     return this.db.runAsync(query)
       .then(() => this.lastId());
@@ -69,8 +63,8 @@ module.exports = class SqliteNoteRepo {
    */
   async createUser(userName, secret) {
     debug('createUser', userName);
-    const escapedUserName = utils.escapeQuotes(userName);
-    const escapedSecret = utils.escapeQuotes(secret);
+    const escapedUserName = dbs.escapeQuotes(userName);
+    const escapedSecret = dbs.escapeQuotes(secret);
     let query = `INSERT INTO users(userName, secret) VALUES ('${escapedUserName}', '${escapedSecret}') `;
     let result;
     debug(query);
@@ -92,7 +86,7 @@ module.exports = class SqliteNoteRepo {
     debug('getNote', noteId, user);
     const query = 'SELECT DISTINCT notes.author, notes.content, notes.created, notes.ROWID as id, notes.privacy, notes.renderHint '
       + `FROM notes, sharing WHERE id=${noteId} `
-      + `AND (notes.privacy=${publicAccess} OR author=${user} OR (notes.privacy=${protectedAccess} AND sharing.user=notes.author AND sharing.sharesWith=${user}))`;
+      + `AND (notes.privacy=${dbs.PUBLIC_ACCESS} OR author=${user} OR (notes.privacy=${dbs.PROTECTED_ACCESS} AND sharing.user=notes.author AND sharing.sharesWith=${user}))`;
     debug(query);
     return this.db.allAsync(query)
       .then((x) => {
@@ -110,7 +104,7 @@ module.exports = class SqliteNoteRepo {
    */
   async getUserId(userName) {
     debug('getUserId', userName);
-    const query = `SELECT ROWID FROM users WHERE userName = '${utils.escapeQuotes(userName)}'`;
+    const query = `SELECT ROWID FROM users WHERE userName = '${dbs.escapeQuotes(userName)}'`;
     debug(query);
     return this.db.allAsync(query)
       .then((x) => {
@@ -196,8 +190,8 @@ module.exports = class SqliteNoteRepo {
         : contentQuery;
       const query = `SELECT DISTINCT notes.rowid FROM notes, sharing WHERE ${contentQueryAnd} `
        + `${conditions.join(' AND ')} `
-       + `AND (privacy=${publicAccess} OR author=${user} OR (privacy=${protectedAccess} AND user=author AND sharesWith=${user})) `
-       + `ORDER BY notes.rowid DESC LIMIT ${queryLimit}`;
+       + `AND (privacy=${dbs.PUBLIC_ACCESS} OR author=${user} OR (privacy=${dbs.PROTECTED_ACCESS} AND user=author AND sharesWith=${user})) `
+       + `ORDER BY notes.rowid DESC LIMIT ${dbs.QUERY_LIMIT}`;
       debug(query);
       return this.db.allAsync(query)
         .then(result => result.map(entry => entry.rowid));
@@ -211,15 +205,15 @@ module.exports = class SqliteNoteRepo {
   }
 
   async setNotePrivate(noteId, user) {
-    return this.setNoteAccess(noteId, user, privateAccess);
+    return this.setNoteAccess(noteId, user, dbs.PRIVATE_ACCESS);
   }
 
   async setNoteProtected(noteId, user) {
-    return this.setNoteAccess(noteId, user, protectedAccess);
+    return this.setNoteAccess(noteId, user, dbs.PROTECTED_ACCESS);
   }
 
   async setNotePublic(noteId, user) {
-    return this.setNoteAccess(noteId, user, publicAccess);
+    return this.setNoteAccess(noteId, user, dbs.PUBLIC_ACCESS);
   }
 
   /**
