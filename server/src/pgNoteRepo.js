@@ -24,7 +24,15 @@ module.exports = class PgRepo {
    * Check the secret against the user id.
    */
   async checkSecret(secret, user) {
-    return true;
+    debug('checkSecret', user);
+    const query = `SELECT secret FROM users WHERE ${user} = id`;
+    debug(query);
+    return this.db.one(query)
+      .then((result) => {
+        const ok = result && result.secret === dbs.escapeQuotes(secret);
+        debug('checkSecret', ok);
+        return ok;
+      });
   }
 
   // eslint-disable-next-line class-methods-use-this
@@ -82,10 +90,16 @@ module.exports = class PgRepo {
   }
 
   /**
-	 * Return the list of names that the user shares with.
-	 */
+   * Return the list of names that the user shares with.
+   */
   async getUserSharesWith(userId) {
-    throw new Error('getUserSharesWith not implemented');
+    const query = 'SELECT DISTINCT users.userName FROM sharing, users '
+      + `WHERE sharing.author = ${userId} AND users.id = sharing.sharesWith AND users.id <> ${userId}`;
+    return this.db.any(query)
+      .then(results => results.map((x) => {
+        debug('getUserSharesWith', userId, x);
+        return x.username;
+      }));
   }
 
   /**
@@ -100,28 +114,41 @@ module.exports = class PgRepo {
 
   /**
    * Return a promise to an array of note ids.
+   *
+   * @param searchTerms text for search "content like '$searchTerms'"
+   *
+   * TODO: implement following
+   * @param searchTerms array whose first element matches a content search,
+   *  and subsequent elements are pairs of keywords and terms to match, e.g.
+   *  [ '%todos%', ['author': 'Bilbo'], ['before': '1914-08-07'] ]
+
    */
   async searchNote(searchTerms, user) {
-    debug('search', searchTerms, user);
-    const query = `SELECT id FROM notes WHERE ${searchTerms}`;
+    debug('search', user, searchTerms);
+    const query = `SELECT DISTINCT notes.id FROM notes, sharing WHERE content like '${searchTerms}' `
+        + `AND (notes.author=${user} OR privacy=${dbs.PUBLIC_ACCESS} `
+          + `OR (privacy=${dbs.PROTECTED_ACCESS} AND notes.author=sharing.author AND sharesWith=${user})) `
+        + `ORDER BY id DESC LIMIT ${dbs.QUERY_LIMIT}`;
     return this.db.any(query)
       .then(results => results.map(row => row.id));
   }
 
   async setNoteAccess(noteId, user, accessMode) {
-    throw new Error('setNoteAccess not implemented');
+    const query = `UPDATE notes SET privacy=${accessMode} WHERE id=${noteId} AND author=${user}`;
+    debug('setPrivate', query);
+    return this.db.one(query);
   }
 
   async setNotePrivate(noteId, user) {
-    throw new Error('setNotePrivate not implemented');
+    return this.setNoteAccess(noteId, user, dbs.PRIVATE_ACCESS);
   }
 
   async setNoteProtected(noteId, user) {
-    throw new Error('setNoteProtected not implemented');
+    return this.setNoteAccess(noteId, user, dbs.PROTECTED_ACCESS);
   }
 
   async setNotePublic(noteId, user) {
-    throw new Error('setNotePublic not implemented');
+    return this.setNoteAccess(noteId, user, dbs.PUBLIC_ACCESS);
   }
 
   async setup() {
@@ -129,21 +156,43 @@ module.exports = class PgRepo {
       `postgres://${this.dbConfig.user}@${this.dbConfig.host}:${this.dbConfig.port}/${this.dbConfig.database}`,
     );
 
-    const createNotes = 'CREATE TABLE IF NOT EXISTS notes(author INT, content TEXT, created INT, id SERIAL PRIMARY KEY)';
-    debug('setup', createNotes);
-    return this.db.none(createNotes)
-      .then(() => {
-        const createUsers = 'CREATE TABLE IF NOT EXISTS users(id SERIAL PRIMARY KEY, secret TEXT, userName TEXT)';
-        debug('setup', createUsers);
-        return this.db.none(createUsers);
-      });
+    const dbErrors = [];
+
+    return [
+      'CREATE TABLE IF NOT EXISTS notes (author INT, content TEXT, created INT, id SERIAL PRIMARY KEY, privacy INT, renderHint INT)',
+      'CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, secret TEXT, userName TEXT)',
+      'CREATE TABLE IF NOT EXISTS sharing (author INT NOT NULL, sharesWith INT NOT NULL, UNIQUE(author, sharesWith))',
+      'CREATE INDEX IF NOT EXISTS idx_shares_with ON sharing (sharesWith)',
+      'CREATE INDEX IF NOT EXISTS idx_sharing_users ON sharing (author)',
+    ].reduce(
+      (accum, query) => {
+        debug('setup', query);
+        return accum.then(() => this.db.none(query))
+          .catch(e => dbErrors.push(e));
+      },
+      Promise.resolve(true),
+    ).then(() => {
+      if (dbErrors.length) {
+        dbErrors.forEach((e, i) => errors('Cannot setup DB', i, e.message));
+        throw (dbErrors[0]);
+      }
+    });
   }
 
   async userBlocks(userId, friendId) {
-    throw new Error('userBlocks not implemented');
+    const query = `DELETE FROM sharing WHERE author=${userId} AND sharesWith=${friendId}`;
+    debug('userBlocks', query);
+    return this.db.one(query);
   }
 
   async userSharesWith(userId, friendId) {
-    throw new Error('userSharesWith not implemented');
+    const query = `INSERT INTO sharing (author, sharesWith) VALUES (${userId}, ${friendId})`;
+    debug('userSharesWith', query);
+    return this.db.one(query)
+      .catch((error) => {
+        if (!error.message.includes('duplicate key value violates unique constraint')) {
+          throw error;
+        }
+      });
   }
 };

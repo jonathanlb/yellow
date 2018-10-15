@@ -124,9 +124,9 @@ describe('Test Postgres note repository', () => {
 			}
 		};
 
-		return repo.searchNote('content like \'%foo%\'', 29)
+		return repo.searchNote('%foo%', 29)
 			.then(result => {
-				expect(query.includes('WHERE content like \'%foo%\'')).toBe(true);
+				expect(query.includes('WHERE content like \'%foo%\''), `actual: ${query}`).toBe(true);
 				expect(result).toEqual([1, 7, 19]);
 			});
 	});
