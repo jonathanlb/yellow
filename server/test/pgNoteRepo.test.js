@@ -121,12 +121,13 @@ describe('Test Postgres note repository', () => {
 			any: (q) => {
 				query = q;
 				return Promise.resolve([{id: 1}, {id: 7}, {id: 19}]);
-			}
+			},
+			oneOrNone: (q) => Promise.resolve({id: 29})
 		};
 
-		return repo.searchNote('%foo%', 29)
+		return repo.searchNote('author: Bilbo %foo%', 29)
 			.then(result => {
-				expect(query.includes('WHERE content like \'%foo%\''), `actual: ${query}`).toBe(true);
+				expect(query.includes(' WHERE n.content like \'%foo%\''), `actual: ${query}`).toBe(true);
 				expect(result).toEqual([1, 7, 19]);
 			});
 	});

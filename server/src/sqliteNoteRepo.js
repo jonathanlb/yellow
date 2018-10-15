@@ -172,17 +172,9 @@ module.exports = class SqliteNoteRepo {
     debug('searchNote', searchTerms, user);
     const queryTerms = Query.parse(searchTerms);
     const contentQuery = Query.condition('content', queryTerms[0]);
-    const conditionsPromises = Promise.all(
-      queryTerms.slice(1)
-        .map((keyTerm) => {
-          if (keyTerm[0] === 'author') {
-            return this.getUserId(keyTerm[1])
-              .then(id => ['author', id]);
-          }
-          return Promise.resolve(keyTerm);
-        }),
-    )
-      .then(conditions => conditions.map(keyTerm => Query.condition(keyTerm[0], keyTerm[1], 'created')));
+    const conditionsPromises = Query.promiseTerms(
+      queryTerms, userName => this.getUserId(userName),
+    );
 
     return conditionsPromises.then((conditions) => {
       const contentQueryAnd = contentQuery.length && conditions.length

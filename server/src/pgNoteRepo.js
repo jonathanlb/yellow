@@ -3,6 +3,7 @@ const errors = require('debug')('pgRepo:error');
 const os = require('os');
 const pg = require('pg-promise');
 const dbs = require('./dbCommon');
+const Query = require('./queryParser');
 
 /**
  * Note repository upon postgres.
@@ -57,7 +58,8 @@ module.exports = class PgRepo {
     debug('createUser', userName);
     const escapedUserName = dbs.escapeQuotes(userName);
     const escapedSecret = dbs.escapeQuotes(secret);
-    const query = `INSERT INTO users(userName, secret) values ('${escapedUserName}', '${escapedSecret}') RETURNING id`;
+    const query = 'INSERT INTO users(userName, secret) '
+      + `values ('${escapedUserName}', '${escapedSecret}') RETURNING id`;
     debug(query);
     return this.db.one(query)
       .then(row => row.id);
@@ -68,14 +70,16 @@ module.exports = class PgRepo {
    */
   async getNote(noteId, user) {
     debug('getNote', noteId, user);
-    const query = `SELECT author, content, created, id FROM notes WHERE id = ${noteId}`;
+    const query = 'SELECT author, content, created, id FROM notes '
+      + `WHERE id = ${noteId}`;
     debug(query);
     return this.db.oneOrNone(query);
   }
 
   async getUserId(userName) {
     debug('getUserId', userName);
-    const query = `SELECT id FROM users WHERE userName = '${dbs.escapeQuotes(userName)}'`;
+    const query = 'SELECT id FROM users '
+      + `WHERE userName = '${dbs.escapeQuotes(userName)}'`;
     debug(query);
     return this.db.oneOrNone(query)
       .then(result => result.id);
@@ -125,12 +129,27 @@ module.exports = class PgRepo {
    */
   async searchNote(searchTerms, user) {
     debug('search', user, searchTerms);
-    const query = `SELECT DISTINCT notes.id FROM notes, sharing WHERE content like '${searchTerms}' `
-        + `AND (notes.author=${user} OR privacy=${dbs.PUBLIC_ACCESS} `
-          + `OR (privacy=${dbs.PROTECTED_ACCESS} AND notes.author=sharing.author AND sharesWith=${user})) `
-        + `ORDER BY id DESC LIMIT ${dbs.QUERY_LIMIT}`;
-    return this.db.any(query)
-      .then(results => results.map(row => row.id));
+    const queryOpt = {
+      table: 'n',
+    };
+    const queryTerms = Query.parse(searchTerms);
+    const contentQuery = Query.condition('content', queryTerms[0], queryOpt);
+    const conditionsPromises = Query.promiseTerms(
+      queryTerms, userName => this.getUserId(userName), queryOpt,
+    );
+
+    return conditionsPromises.then((conditions) => {
+      const contentQueryAnd = contentQuery.length && conditions.length
+        ? `${contentQuery} AND`
+        : contentQuery;
+      const query = 'SELECT DISTINCT n.id FROM notes as n, sharing as s '
+        + `WHERE ${contentQueryAnd} ${conditions.join(' AND ')} `
+        + `AND (n.privacy=${dbs.PUBLIC_ACCESS} OR n.author=${user} OR (n.privacy=${dbs.PROTECTED_ACCESS} AND n.author=s.author AND s.sharesWith=${user})) `
+        + `ORDER BY n.id DESC LIMIT ${dbs.QUERY_LIMIT}`;
+      debug(query);
+      return this.db.any(query)
+        .then(results => results.map(row => row.id));
+    });
   }
 
   async setNoteAccess(noteId, user, accessMode) {
