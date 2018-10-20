@@ -39,7 +39,8 @@ label {
 }
 
 .cardContent {
-
+  padding-left: 6px;
+  padding-right: 6px;
 }
 
 .cardDate {

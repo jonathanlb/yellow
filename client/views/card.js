@@ -1,7 +1,9 @@
 /* eslint indent: 0 */
+const marked = require('marked');
 const yo = require('yo-yo');
 
 const cardClass = 'cardContainer';
+const RENDER_MD = 1;
 
 module.exports = (cardInfo) => {
   const cardId = `yellowCard-${cardInfo.id}`;
@@ -48,7 +50,8 @@ module.exports = (cardInfo) => {
     }
   };
 
-  return yo`
+  const contentId = `${cardId}-content`;
+  const result = yo`
     <div class="${cardClass}" id="${cardId}"
       onmousedown=${mouseDown}
       onmousemove=${mouseMove}
@@ -57,9 +60,22 @@ module.exports = (cardInfo) => {
         <span class="cardAuthor" >${cardInfo.author}</span>
         <span class="cardDate" >${timeStr} <a onclick=${closeCard}>X</a></span>
       </div>
-      <div class="cardContent" >
-        <pre>${[yo`${cardInfo.content}`]}</pre>
-      </div>
+      <div class="cardContent" id="${contentId}" ></div>
     </div>
   `;
+
+  const contentElt = Array.from(result.children)
+    .find(x => x.id === contentId);
+  if (cardInfo.renderHint === RENDER_MD) {
+    // XXX marked sets markdown element ids. Should we worry about collisions?
+    contentElt.innerHTML = `<div class="cardContent" id="${contentId}" >
+      ${marked(cardInfo.content, { sanitize: true })}
+      </div>`;
+  } else {
+    // rely on yo-yo to sanitize content
+    contentElt.innerHTML = `<div class="cardContent" id="${contentId}" >
+      <pre>${[yo`${cardInfo.content}`]}</pre>
+      </div>`;
+  }
+  return result;
 };

@@ -22,11 +22,26 @@ describe('Card component', () => {
       `no content: ${elt.innerHTML}`)
       .toBe(true);
 
+    expect(elt.innerHTML.includes('<pre>') && elt.innerHTML.includes('</pre>'),
+      `expecting preformated content: ${elt.innerHTML}`)
+      .toBe(true);
+
     expect(elt.innerHTML.includes((new Date(1000)).toLocaleDateString()),
       `no date: ${elt.innerHTML}`)
       .toBe(true);
 
     expect(elt.id).toEqual(`yellowCard-${cardInfo.id}`);
+  });
+
+  test('renders markdown', () => {
+    const cardInfo = createCard();
+    cardInfo.content = '# Title\n- first\n- second';
+    cardInfo.renderHint = 1;
+    const elt = renderCard(cardInfo);
+
+    expect(elt.innerHTML.includes('<h1 id="title">Title</h1>'),
+      `no markdown: ${elt.innerHTML}`)
+      .toBe(true);
   });
 
   test('drags', () => {
