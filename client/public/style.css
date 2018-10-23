@@ -20,6 +20,7 @@ header {
 label {
 	font-family: sans-serif;
 	font-weight: bold;
+	pointer: cursor;
 }
 
 .cardAuthor {
@@ -94,4 +95,86 @@ label {
 
 .navbarItem:hover {
 	background: palegreen;
+}
+
+.postControls {
+	display: flex;
+}
+
+.slidingSwitch {
+  max-width: 600px;
+	padding-left: 4px;
+	padding-right: 10px;
+}
+
+.slidingSwitch input{
+  visibility: hidden;
+  display: inline-block;
+  width: 0px;
+  height: 0px;
+	margin: 0px;
+}
+
+.slidingSwitchContainer{
+  background-color: yellow;
+  height: 20px;
+  display: inline-block;
+  width: 50px;
+  border-radius: 10px;
+  position: relative;
+  vertical-align: middle;
+  box-shadow: inset 0px 0px 3px 1px rgba(0,0,0,0.3);
+  margin-left: 5px;
+	margin-right: 10px;
+  transition: background-color 300ms ease-in-out;
+}
+
+.slidingSwitchToggle {
+  display: block;
+  height: 24px;
+  width: 24px;
+  border-radius: 12px;
+  background-color: white;
+  border: 1px solid #DDD;
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  box-shadow: 0px 0px 3px rgba(0,0,0,0.2);
+  cursor: pointer;
+
+  transition: left 300ms ease-in-out;
+}
+
+.slidingSwitchToggle:after {
+  content: 'X';
+	font-style: normal;
+	font-weight: bold;
+  /* font-family: 'FontAwesome'; */
+  font-size: 12px;
+  color: gold;
+  display: block;
+  position: absolute;
+  top: 50%;
+  margin-top: -6px;
+  left: 0;
+  width: 100%;
+  text-align: center;
+
+  transition: color 300ms ease-in-out;
+
+}
+
+input:checked + .slidingSwitchContainer{
+  background-color: palegreen;
+}
+
+input:checked + .slidingSwitchContainer .slidingSwitchToggle {
+  left: calc( 100% - 20px );
+}
+
+input:checked + .slidingSwitchContainer .slidingSwitchToggle:after {
+  content: 'O';
+	font-style: normal;
+	font-weight: bold;
+  color: green;
 }

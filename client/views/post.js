@@ -1,8 +1,10 @@
 /* eslint indent: 0 */
 const yo = require('yo-yo');
+const slidingSwitch = require('./slidingSwitch');
 
 module.exports = (app) => {
   const textAreaField = 'noteText';
+  const switchId = 'mdSwitch';
 
   function createNote() {
     const elt = document.getElementById(textAreaField);
@@ -19,7 +21,10 @@ module.exports = (app) => {
         onkeyup=${e => (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) && createNote()} >
       </textarea>
       <br/>
-      <button onclick=${createNote} >Save</button>
+      <div class="postControls">
+        ${slidingSwitch({ label: 'Save as Markdown:', switchId })}
+        <button onclick=${createNote} >Save</button>
+      </div>
   </div>
   `;
 };

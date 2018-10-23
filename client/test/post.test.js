@@ -25,7 +25,7 @@ describe('Post component', () => {
       .find(e => e.id === 'noteText');
     textArea.value = toSave;
 
-    return Array.from(elt.childNodes)
+    return Array.from(document.getElementsByTagName('button'))
       .find(e => e.textContent === 'Save')
       .onclick()
       .then(() => {
