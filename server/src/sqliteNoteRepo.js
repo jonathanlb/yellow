@@ -48,11 +48,13 @@ module.exports = class SqliteNoteRepo {
    * Insert a new note into the repository returning a promise to the note
    * id.
    */
-  async createNote(content, user) {
+  async createNote(content, user, opts) {
     debug('createNote', content, user);
     const escapedContent = dbs.escapeQuotes(content);
     const epochS = dbs.getEpochSeconds();
-    const query = `INSERT INTO notes(author, content, created, privacy) VALUES (${user}, '${escapedContent}', ${epochS}, ${dbs.DEFAULT_ACCESS})`;
+    const { access, renderHint } = dbs.getCreateOptions(opts);
+    const query = 'INSERT INTO notes(author, content, created, privacy, renderHint)'
+      + ` VALUES (${user}, '${escapedContent}', ${epochS}, ${access}, ${renderHint})`;
     debug(query);
     return this.db.runAsync(query)
       .then(() => this.lastId());

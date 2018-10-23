@@ -18,6 +18,14 @@ describe('Test routing instantiation', () => {
           expect(response.statusCode).toBe(200);
         });
     });
+
+    test('parses object arguments', () => {
+      const entry = { access: 0 };
+      const entryStr = encodeURIComponent(JSON.stringify(entry));
+      const params = { opts: entryStr};
+      const response = Server.parseRequestObject(params, entryStr);
+      expect(response).toEqual(entry);
+    });
 });
 
 describe('Test note routing', () => {
@@ -39,6 +47,19 @@ describe('Test note routing', () => {
 
     return createServer(app).
       then(() => request(app).get(`/note/create/sEcr3t/noobe/${content}`)).
+      then(response => {
+        expect(response.statusCode).toBe(200);
+        expect(response.text).toEqual('0');
+      });
+  });
+
+  test('Handles note create with options', () => {
+    const app = express();
+    const content = encodeURIComponent('<h1>My Day</h1><p>Some note</p>');
+    const opts = encodeURIComponent(JSON.stringify({ access:0 }));
+
+    return createServer(app).
+      then(() => request(app).get(`/note/create/sEcr3t/noobe/${content}/${opts}`)).
       then(response => {
         expect(response.statusCode).toBe(200);
         expect(response.text).toEqual('0');

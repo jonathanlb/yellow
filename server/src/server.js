@@ -77,6 +77,11 @@ module.exports = class Server {
     return decodeURIComponent(entry);
   }
 
+  static parseRequestObject(params, entry) {
+    debug('parseRequest', entry);
+    return JSON.parse(Server.parseRequest(params, entry));
+  }
+
   /**
    * Wire the routes.
    */
@@ -127,15 +132,27 @@ module.exports = class Server {
   }
 
   setupNoteCreate() {
+    // Spare some redundancy from making note creation options optional.
+    const createNote = (content, user, res, opts) => this.repo.createNote(content, user, opts)
+      .then((id) => {
+        debug('created', id);
+        res.status(200).send(id.toString());
+      });
+
     this.router.get(
       '/note/create/:secret/:user/:content',
       (req, res) => this.checkSecret(req.params, res, () => {
         const content = Server.parseRequest(req.params, req.params.content);
-        return this.repo.createNote(content, req.params.user)
-          .then((id) => {
-            debug('created', id);
-            res.status(200).send(id.toString());
-          });
+        return createNote(content, req.params.user, res);
+      }),
+    );
+
+    this.router.get(
+      '/note/create/:secret/:user/:content/:opts',
+      (req, res) => this.checkSecret(req.params, res, () => {
+        const content = Server.parseRequest(req.params, req.params.content);
+        const opts = Server.parseRequestObject(req.params, req.params.opts);
+        return createNote(content, req.params.user, res, opts);
       }),
     );
   }

@@ -44,11 +44,14 @@ module.exports = class PgRepo {
    * Insert a new note into the repository returning a promise to the note
    * id.
    */
-  async createNote(content, user) {
+  async createNote(content, user, opts) {
     debug('createNote', content, user);
     const escapedContent = dbs.escapeQuotes(content);
     const epochS = dbs.getEpochSeconds();
-    const query = `INSERT INTO notes(author, content, created) values (${user}, '${escapedContent}', ${epochS}) RETURNING id`;
+    const { access, renderHint } = dbs.getCreateOptions(opts);
+    const query = 'INSERT INTO notes(author, content, created, privacy, renderHint)'
+      + ` VALUES (${user}, '${escapedContent}', ${epochS}, ${access}, ${renderHint})`
+      + ' RETURNING id';
     debug(query);
     return this.db.one(query)
       .then(row => row.id);
