@@ -33,8 +33,10 @@ describe('Sliding Switch component', () => {
     document.body.appendChild(ss);
 
     const checkBox = document.getElementById(switchId);
+    expect(checkBox.checked).toBe(false);
     checkBox.click();
     expect(clicked).toBe(true);
     expect(received).toBe(true);
+    expect(checkBox.checked).toBe(true);
   });
 });

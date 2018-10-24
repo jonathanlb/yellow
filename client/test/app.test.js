@@ -46,6 +46,29 @@ describe('Application framework', () => {
       });
   });
 
+  test('Creates formatted cards', () => {
+    const content = '# Hello, World!';
+    global.fetch.mockResponseOnce('29');
+    const card = {
+      author: 'Jonathan',
+      content,
+      created: 1,
+      id: 29,
+      renderHint: 1,
+    };
+    global.fetch.mockResponseOnce(JSON.stringify(card));
+
+    const app = new App(setUpDocument());
+    return app.setup()
+      .then(() => app.render(Views.post))
+      .then(() => app.createNote(content, { renderHint: 1 }))
+      .then(() => { // XXX we don't check that opts are passed along
+        const appContent = document.getElementById(selector).innerHTML;
+        expect(appContent.includes('Hello, World!</h1>'), `looking for note in\n${appContent}`)
+          .toBe(true);
+      });
+  });
+
   test('Gets default server host', () => {
     const server = App.getServerPrefix({});
     expect(server.endsWith(':3000/'), `host ${server} ends with port`).toBe(true);

@@ -9,7 +9,8 @@ module.exports = (app) => {
   function createNote() {
     const elt = document.getElementById(textAreaField);
     const content = elt.value.trim();
-    return app.createNote(content)
+    const mdCheck = document.getElementById(switchId);
+    return app.createNote(content, { renderHint: mdCheck.checked ? 1 : 0 })
       .then(() => { elt.value = ''; });
   }
 

@@ -51,9 +51,10 @@ module.exports = class App {
     return result;
   }
 
-  async createNote(content) {
+  async createNote(content, opts) {
     const escapedContent = encodeURIComponent(content);
-    const cmd = `${this.serverPrefix}note/create/${this.secret}/${this.userId}/${escapedContent}`;
+    const optStr = opts ? `/${encodeURIComponent(JSON.stringify(opts))}` : '';
+    const cmd = `${this.serverPrefix}note/create/${this.secret}/${this.userId}/${escapedContent}${optStr}`;
     return fetch(cmd)
       .then((response) => {
         if (response.status === 200) {
