@@ -1,9 +1,12 @@
+const bcrypt = require('bcrypt');
 const debug = require('debug')('pgRepo');
 const errors = require('debug')('pgRepo:error');
 const os = require('os');
 const pg = require('pg-promise');
 const dbs = require('./dbCommon');
 const Query = require('./queryParser');
+
+const SALT_ROUNDS = 10;
 
 /**
  * Note repository upon postgres.
@@ -28,12 +31,11 @@ module.exports = class PgRepo {
     debug('checkSecret', user);
     const query = `SELECT secret FROM users WHERE ${user} = id`;
     debug(query);
-    return this.db.one(query)
-      .then((result) => {
-        const ok = result && result.secret === dbs.escapeQuotes(secret);
-        debug('checkSecret', ok);
-        return ok;
-      });
+    const result = await this.db.one(query);
+    const ok = result
+      && bcrypt.compare(result.secret, secret);
+    debug('checkSecret', ok);
+    return ok;
   }
 
   // eslint-disable-next-line class-methods-use-this
@@ -60,7 +62,7 @@ module.exports = class PgRepo {
   async createUser(userName, secret) {
     debug('createUser', userName);
     const escapedUserName = dbs.escapeQuotes(userName);
-    const escapedSecret = dbs.escapeQuotes(secret);
+    const escapedSecret = await bcrypt.hash(secret, SALT_ROUNDS);
     const query = 'INSERT INTO users(userName, secret) '
       + `values ('${escapedUserName}', '${escapedSecret}') RETURNING id`;
     debug(query);

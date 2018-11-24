@@ -1,9 +1,11 @@
+const bcrypt = require('bcrypt');
 const debug = require('debug')('sqliteNoteRepo');
 const errors = require('debug')('sqliteNoteRepo:error');
 const sqlite3 = require('sqlite3-promise').verbose();
 const dbs = require('./dbCommon');
 const Query = require('./queryParser');
 
+const SALT_ROUNDS = 10;
 /**
  * Note repository upon SqLite3.
  * Does not work from ChromeOS -- "relocatable text" error upon
@@ -14,7 +16,7 @@ module.exports = class SqliteNoteRepo {
     const fileOrMemory = opts.file || ':memory:';
     this.db = new sqlite3.Database(
       fileOrMemory,
-      sqlite3.OPEN_CREATE | sqlite3.OPEN_READWRITE, // eslint-disable-line
+      sqlite3.OPEN_CREATE | sqlite3.OPEN_READWRITE, // eslint-disable-line no-bitwise
       (err) => {
         if (err) {
           errors(err.message);
@@ -27,17 +29,15 @@ module.exports = class SqliteNoteRepo {
 
   /**
    * Check the secret against the user id.
-   * TODO: add salt
    */
   async checkSecret(secret, user) {
     const query = `SELECT secret FROM users WHERE ${user} = rowid`;
-    return this.db.allAsync(query)
-      .then((result) => {
-        const ok = result.length > 0
-          && result[0].secret === dbs.escapeQuotes(secret);
-        debug('checkSecret', ok);
-        return ok;
-      });
+    const result = await this.db.allAsync(query);
+    debug('checkSecret', result);
+    const ok = result.length > 0
+      && bcrypt.compare(secret, result[0].secret);
+    debug('checkSecret', ok);
+    return ok;
   }
 
   close() {
@@ -66,19 +66,15 @@ module.exports = class SqliteNoteRepo {
   async createUser(userName, secret) {
     debug('createUser', userName);
     const escapedUserName = dbs.escapeQuotes(userName);
-    const escapedSecret = dbs.escapeQuotes(secret);
-    let query = `INSERT INTO users(userName, secret) VALUES ('${escapedUserName}', '${escapedSecret}') `;
-    let result;
+    const escapedSecret = await bcrypt.hash(secret, SALT_ROUNDS);
+    let query = `INSERT INTO users(userName, secret) VALUES ('${escapedUserName}', '${escapedSecret}')`;
     debug(query);
-    return this.db.runAsync(query)
-      .then(() => this.lastId())
-      .then((id) => {
-        result = id;
-        query = `INSERT INTO sharing (user, sharesWith) VALUES (${result}, ${result})`;
-        debug(query);
-        return this.db.runAsync(query);
-      })
-      .then(() => result);
+    await this.db.runAsync(query);
+    const result = await this.lastId();
+    query = `INSERT INTO sharing (user, sharesWith) VALUES (${result}, ${result})`;
+    debug(query);
+    await this.db.runAsync(query);
+    return result;
   }
 
   /**
