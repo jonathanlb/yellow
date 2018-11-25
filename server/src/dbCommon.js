@@ -37,4 +37,12 @@ module.exports = {
   },
 
   getEpochSeconds: () => Math.round((new Date()).getTime() / 1000),
+
+  requireInt(x, fieldNameDesc) {
+    if (typeof x !== 'number') {
+      throw new Error(`expecting number for ${fieldNameDesc}, got ${typeof x}`);
+    } else if (x % 1 !== 0) {
+      throw new Error(`expecting integer for ${fieldNameDesc}, got ${x}`);
+    }
+  },
 };

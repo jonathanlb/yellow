@@ -23,7 +23,9 @@ module.exports = class Server {
    */
   checkSecret(params, res, f) {
     const secret = Server.parseRequest(params, params.secret);
-    const userId = Server.parseRequest(params, params.user);
+    const userId = parseInt(
+      Server.parseRequest(params, params.user), 10,
+    );
     Server.setCors(res);
     return this.repo.checkSecret(secret, userId)
       .then((ok) => {
@@ -32,6 +34,10 @@ module.exports = class Server {
         } else {
           f();
         }
+      })
+      .catch((err) => {
+        errors('checkSecret', err.message);
+        res.status(403).send('Unauthorized');
       });
   }
 
@@ -114,7 +120,7 @@ module.exports = class Server {
   setupNoteAccess() {
     this.router.get(
       '/note/setAccess/:secret/:user/:note/:access',
-      (req, res) => this.checkSecret(req.params, res, () => {
+      (req, res, next) => this.checkSecret(req.params, res, () => {
         const userId = parseInt(req.params.user, 10);
         const noteId = parseInt(req.params.note, 10);
         const accessMode = parseInt(req.params.access, 10);
@@ -124,9 +130,7 @@ module.exports = class Server {
             debug('note access', noteId, accessMode);
             res.status(200).send('');
           })
-          .catch((e) => {
-            res.status(400).send(e.message);
-          });
+          .catch(next);
       }),
     );
   }
@@ -141,18 +145,20 @@ module.exports = class Server {
 
     this.router.get(
       '/note/create/:secret/:user/:content',
-      (req, res) => this.checkSecret(req.params, res, () => {
+      (req, res, next) => this.checkSecret(req.params, res, () => {
         const content = Server.parseRequest(req.params, req.params.content);
-        return createNote(content, req.params.user, res);
+        return createNote(content, parseInt(req.params.user, 10), res)
+          .catch(next);
       }),
     );
 
     this.router.get(
       '/note/create/:secret/:user/:content/:opts',
-      (req, res) => this.checkSecret(req.params, res, () => {
+      (req, res, next) => this.checkSecret(req.params, res, () => {
         const content = Server.parseRequest(req.params, req.params.content);
         const opts = Server.parseRequestObject(req.params, req.params.opts);
-        return createNote(content, req.params.user, res, opts);
+        return createNote(content, parseInt(req.params.user, 10), res, opts)
+          .catch(next);
       }),
     );
   }
@@ -160,13 +166,17 @@ module.exports = class Server {
   setupNoteDelete() {
     this.router.get(
       '/note/delete/:secret/:user/:noteId',
-      (req, res) => this.checkSecret(req.params, res, () => {
+      (req, res, next) => this.checkSecret(req.params, res, () => {
         debug('delete', req.params.noteId);
-        return this.repo.removeNote(req.params.noteId, req.params.user)
+        return this.repo.removeNote(
+          parseInt(req.params.noteId, 10),
+          parseInt(req.params.user, 10),
+        )
           .then((result) => {
             debug('deleted', result);
             res.status(200).send(result.toString());
-          });
+          })
+          .catch(next);
       }),
     );
   }
@@ -174,8 +184,8 @@ module.exports = class Server {
   setupNoteGet() {
     this.router.get(
       '/note/get/:secret/:user/:noteId',
-      (req, res) => this.checkSecret(req.params, res, () => {
-        const id = req.params.noteId;
+      (req, res, next) => this.checkSecret(req.params, res, () => {
+        const id = parseInt(req.params.noteId, 10);
         const userId = parseInt(req.params.user, 10);
         return this.repo.getNote(id, userId)
           .then((content) => {
@@ -190,7 +200,8 @@ module.exports = class Server {
                 });
             }
             return res.status(404).send(`Not found: ${id}`);
-          });
+          })
+          .catch(next);
       }),
     );
   }
@@ -201,7 +212,10 @@ module.exports = class Server {
       (req, res) => this.checkSecret(
         req.params,
         res,
-        () => this.repo.searchNote(req.params.searchTerm, parseInt(req.params.user, 10))
+        () => this.repo.searchNote(
+          req.params.searchTerm,
+          parseInt(req.params.user, 10),
+        )
           .then((results) => {
             debug('found', req.params.searchTerm, results);
             res.status(200).send(JSON.stringify(results));
@@ -221,14 +235,15 @@ module.exports = class Server {
   setupUserCreate() {
     this.router.get(
       '/user/create/:secret/:userName',
-      (req, res) => {
+      (req, res, next) => {
         const userName = Server.parseRequest(req.params, req.params.userName);
         debug('user create', userName);
         return this.repo.createUser(userName, req.params.secret)
           .then((id) => {
             debug('user created', id);
             res.status(200).send(id.toString());
-          });
+          })
+          .catch(next);
       },
     );
   }
@@ -243,7 +258,7 @@ module.exports = class Server {
   setupUserIdGet() {
     this.router.get(
       '/user/get/:secret/:user/:userName',
-      (req, res) => {
+      (req, res, next) => {
         const userName = Server.parseRequest(req.params, req.params.userName);
         const userId = parseInt(req.params.user, 10);
 
@@ -261,7 +276,8 @@ module.exports = class Server {
               } else {
                 res.status(404).send(`Not found: ${userName}`);
               }
-            });
+            })
+            .catch(next);
         });
       },
     );

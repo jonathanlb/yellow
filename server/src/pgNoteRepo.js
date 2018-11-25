@@ -28,7 +28,8 @@ module.exports = class PgRepo {
    * Check the secret against the user id.
    */
   async checkSecret(secret, user) {
-    debug('checkSecret', user);
+    debug('checkSecret:user', user);
+    dbs.requireInt(user, 'checkSecret');
     const query = `SELECT secret FROM users WHERE ${user} = id`;
     debug(query);
     const result = await this.db.one(query);
@@ -75,6 +76,8 @@ module.exports = class PgRepo {
    */
   async getNote(noteId, user) {
     debug('getNote', noteId, user);
+    dbs.requireInt(noteId, 'getNote:noteId');
+    dbs.requireInt(user, 'getNote:user');
     const query = 'SELECT author, content, created, id FROM notes '
       + `WHERE id = ${noteId}`;
     debug(query);
@@ -92,6 +95,7 @@ module.exports = class PgRepo {
 
   async getUserName(userId) {
     debug('getUserName', userId);
+    dbs.requireInt(userId, 'getUserName:userId');
     const query = `SELECT userName FROM users WHERE id = ${userId}`;
     debug(query);
     return this.db.oneOrNone(query)
@@ -102,6 +106,7 @@ module.exports = class PgRepo {
    * Return the list of names that the user shares with.
    */
   async getUserSharesWith(userId) {
+    dbs.requireInt(userId, 'getUserSharesWith:userId');
     const query = 'SELECT DISTINCT users.userName FROM sharing, users '
       + `WHERE sharing.author = ${userId} AND users.id = sharing.sharesWith AND users.id <> ${userId}`;
     return this.db.any(query)
@@ -116,6 +121,8 @@ module.exports = class PgRepo {
    */
   async removeNote(noteId, user) {
     debug('removeNote', noteId, user);
+    dbs.requireInt(noteId, 'removeNote:noteId');
+    dbs.requireInt(user, 'removeNote:user');
     const query = `DELETE FROM notes WHERE id = ${noteId} AND author = ${user}`;
     debug(query);
     return this.db.none(query);
@@ -134,6 +141,7 @@ module.exports = class PgRepo {
    */
   async searchNote(searchTerms, user) {
     debug('search', user, searchTerms);
+    dbs.requireInt(user, 'searchNote:user');
     const queryOpt = {
       table: 'n',
     };
@@ -158,20 +166,29 @@ module.exports = class PgRepo {
   }
 
   async setNoteAccess(noteId, user, accessMode) {
+    dbs.requireInt(noteId, 'setNoteAccess:noteId');
+    dbs.requireInt(user, 'setNoteAccess:user');
+    dbs.requireInt(accessMode, 'setNoteAccess:accessMode');
     const query = `UPDATE notes SET privacy=${accessMode} WHERE id=${noteId} AND author=${user}`;
     debug('setPrivate', query);
     return this.db.one(query);
   }
 
   async setNotePrivate(noteId, user) {
+    dbs.requireInt(noteId, 'setNoteAccessPrivate:noteId');
+    dbs.requireInt(user, 'setNoteAccessPrivate:user');
     return this.setNoteAccess(noteId, user, dbs.PRIVATE_ACCESS);
   }
 
   async setNoteProtected(noteId, user) {
+    dbs.requireInt(noteId, 'setNoteAccessProtected:noteId');
+    dbs.requireInt(user, 'setNoteAccessProtected:user');
     return this.setNoteAccess(noteId, user, dbs.PROTECTED_ACCESS);
   }
 
   async setNotePublic(noteId, user) {
+    dbs.requireInt(noteId, 'setNoteAccessPublic:noteId');
+    dbs.requireInt(user, 'setNoteAccessPublic:user');
     return this.setNoteAccess(noteId, user, dbs.PUBLIC_ACCESS);
   }
 
@@ -204,12 +221,16 @@ module.exports = class PgRepo {
   }
 
   async userBlocks(userId, friendId) {
+    dbs.requireInt(userId, 'userBlocks:userId');
+    dbs.requireInt(friendId, 'userBlocks:friendId');
     const query = `DELETE FROM sharing WHERE author=${userId} AND sharesWith=${friendId}`;
     debug('userBlocks', query);
     return this.db.one(query);
   }
 
   async userSharesWith(userId, friendId) {
+    dbs.requireInt(userId, 'userSharesWith:userId');
+    dbs.requireInt(friendId, 'userSharesWith:friendId');
     const query = `INSERT INTO sharing (author, sharesWith) VALUES (${userId}, ${friendId})`;
     debug('userSharesWith', query);
     return this.db.one(query)

@@ -32,6 +32,7 @@ module.exports = class SqliteNoteRepo {
    */
   async checkSecret(secret, user) {
     const query = `SELECT secret FROM users WHERE ${user} = rowid`;
+    dbs.requireInt(user, 'checkSecret:user');
     const result = await this.db.allAsync(query);
     debug('checkSecret', result);
     const ok = result.length > 0
@@ -50,6 +51,7 @@ module.exports = class SqliteNoteRepo {
    */
   async createNote(content, user, opts) {
     debug('createNote', content, user);
+    dbs.requireInt(user, 'createNote:user');
     const escapedContent = dbs.escapeQuotes(content);
     const epochS = dbs.getEpochSeconds();
     const { access, renderHint } = dbs.getCreateOptions(opts);
@@ -82,6 +84,8 @@ module.exports = class SqliteNoteRepo {
    */
   async getNote(noteId, user) {
     debug('getNote', noteId, user);
+    dbs.requireInt(noteId, 'getNote:noteId');
+    dbs.requireInt(user, 'getNote:user');
     const query = 'SELECT DISTINCT notes.author, notes.content, notes.created, notes.ROWID as id, notes.privacy, notes.renderHint '
       + `FROM notes, sharing WHERE id=${noteId} `
       + `AND (notes.privacy=${dbs.PUBLIC_ACCESS} OR author=${user} OR (notes.privacy=${dbs.PROTECTED_ACCESS} AND sharing.user=notes.author AND sharing.sharesWith=${user}))`;
@@ -119,6 +123,7 @@ module.exports = class SqliteNoteRepo {
    */
   async getUserName(userId) {
     debug('getUserName', userId);
+    dbs.requireInt(userId, 'getUserName:userId');
     const query = `SELECT userName FROM users WHERE ROWID = ${userId}`;
     debug(query);
     return this.db.allAsync(query)
@@ -132,6 +137,7 @@ module.exports = class SqliteNoteRepo {
    * Return the list of names that the user shares with.
    */
   async getUserSharesWith(userId) {
+    dbs.requireInt(userId, 'getUserSharesWith:userId');
     const query = 'SELECT DISTINCT users.userName FROM sharing, users '
       + `WHERE sharing.user = ${userId} AND users.ROWID = sharing.sharesWith AND users.ROWID <> ${userId}`;
     return this.db.allAsync(query)
@@ -155,6 +161,8 @@ module.exports = class SqliteNoteRepo {
    */
   async removeNote(noteId, user) {
     debug('removeNote', noteId, user);
+    dbs.requireInt(noteId, 'removeNote:noteId');
+    dbs.requireInt(user, 'removeNote:user');
     const query = `DELETE FROM notes WHERE rowid = ${noteId} AND author = ${user}`;
     debug(query);
     return this.db.allAsync(query);
@@ -168,6 +176,7 @@ module.exports = class SqliteNoteRepo {
    */
   async searchNote(searchTerms, user) {
     debug('searchNote', searchTerms, user);
+    dbs.requireInt(user, 'searchNote:user');
     const queryTerms = Query.parse(searchTerms);
     const contentQuery = Query.condition('content', queryTerms[0]);
     const conditionsPromises = Query.promiseTerms(
@@ -189,20 +198,29 @@ module.exports = class SqliteNoteRepo {
   }
 
   async setNoteAccess(noteId, user, accessMode) {
+    dbs.requireInt(noteId, 'setNoteAccess:noteId');
+    dbs.requireInt(user, 'setNoteAccess:user');
+    dbs.requireInt(accessMode, 'setNoteAccess:accessMode');
     const query = `UPDATE notes SET privacy=${accessMode} WHERE rowid=${noteId} AND author=${user}`;
-    debug('setPrivate', query);
+    debug('setNoteAccess', query);
     return this.db.runAsync(query);
   }
 
   async setNotePrivate(noteId, user) {
+    dbs.requireInt(noteId, 'setNotePrivate:noteId');
+    dbs.requireInt(user, 'setNotePrivate:user');
     return this.setNoteAccess(noteId, user, dbs.PRIVATE_ACCESS);
   }
 
   async setNoteProtected(noteId, user) {
+    dbs.requireInt(noteId, 'setNoteProtected:noteId');
+    dbs.requireInt(user, 'setNoteProtected:user');
     return this.setNoteAccess(noteId, user, dbs.PROTECTED_ACCESS);
   }
 
   async setNotePublic(noteId, user) {
+    dbs.requireInt(noteId, 'setNotePublic:noteId');
+    dbs.requireInt(user, 'setNotePublic:user');
     return this.setNoteAccess(noteId, user, dbs.PUBLIC_ACCESS);
   }
 
@@ -226,12 +244,16 @@ module.exports = class SqliteNoteRepo {
   }
 
   async userBlocks(userId, friendId) {
+    dbs.requireInt(userId, 'userBlocks:userId');
+    dbs.requireInt(friendId, 'userBlocks:friendId');
     const query = `DELETE FROM sharing WHERE user=${userId} AND sharesWith=${friendId}`;
     debug('userBlocks', query);
     return this.db.runAsync(query);
   }
 
   async userSharesWith(userId, friendId) {
+    dbs.requireInt(userId, 'userSharesWith:userId');
+    dbs.requireInt(friendId, 'userSharesWith:friendId');
     const query = `INSERT INTO sharing (user, sharesWith) VALUES (${userId}, ${friendId})`;
     debug('userSharesWith', query);
     return this.db.runAsync(query)

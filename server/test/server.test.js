@@ -129,8 +129,8 @@ describe('Test note routing', () => {
     return createServer(app).
       then(() => request(app).get(`/note/setAccess/sEcr3t/nineteen/31/0`)).
       then(response => {
-        expect(response.statusCode).toBe(400);
-        expect(response.text).toEqual('invalid user id: NaN');
+        expect(response.statusCode).toBe(500);
+        expect(response.text.includes('invalid user id: NaN')).toBe(true);
       });
   });
 
