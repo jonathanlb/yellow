@@ -22,7 +22,7 @@ module.exports = {
   /**
    * Pad quotes in a string so we can store in in the db.
    */
-  escapeQuotes: str => str.replace(/'/g, '\\\''),
+  escapeQuotes: str => str.replace(/'/g, '\'\''),
 
   getCreateOptions: (opts) => {
     const defaults = {

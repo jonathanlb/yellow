@@ -34,9 +34,9 @@ function condition(keyword, term, opt) {
       return `${tableNamePrefix(opt)}${keyword} = ${term}`;
     case 'string':
       if (term.includes('%')) {
-        return `${tableNamePrefix(opt)}${keyword} like '${term}'`;
+        return `${tableNamePrefix(opt)}${keyword} like '${util.escapeQuotes(term)}'`;
       }
-      return `${tableNamePrefix(opt)}${keyword} = '${term}'`;
+      return `${tableNamePrefix(opt)}${keyword} = '${util.escapeQuotes(term)}'`;
 
     default:
       throw new Error(`cannot interpret term ${term} with type ${typeOfTerm}`);

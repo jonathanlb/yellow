@@ -99,18 +99,16 @@ describe('Test SqLite3 note repository', () => {
       });
   });
 
-  test('Handles failed user id lookup', () => {
+  test('Handles quoted content', async () => {
     const repo = new Repo({});
-    const userId = 1;
+    await repo.setup();
 
-    return repo.setup().
-      then(() => repo.getUserId('Bilbo Baggins')).
-      then(result => expect(result).toBe(-1)).
-      then(() => repo.close()).
-      catch(e => {
-        repo.close();
-        throw e;
-      });
+    const userId = await repo.createUser('Jonathan', 's3cr3T');
+    const noteId = await repo.createNote('Let\'s fix \'THIS\'', userId);
+    const search = await repo.searchNote('%Let\'s%', userId);
+    expect(search).toEqual([noteId]);
+
+    return repo.close();
   });
 
   test('Searches notes', () => {
