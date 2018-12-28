@@ -21,23 +21,21 @@ module.exports = class Server {
    * @param res the HTTP response used to send unauthorized response.
    * @param f the callback for successful authorization.
    */
-  checkSecret(params, res, f) {
-    const secret = Server.parseRequest(params, params.secret);
-    const userId = parseInt(
-      Server.parseRequest(params, params.user), 10,
-    );
-    Server.setCors(res);
+  checkSecret(request, response, f) {
+    const secret = decodeURIComponent(request.headers['x-access-token']);
+    const userId = parseInt(request.params.user, 10);
+    Server.setCors(response);
     return this.repo.checkSecret(secret, userId)
       .then((ok) => {
         if (!ok) {
-          res.status(403).send('Unauthorized');
+          response.status(403).send('Unauthorized');
         } else {
           f();
         }
       })
       .catch((err) => {
         errors('checkSecret', err.message);
-        res.status(403).send('Unauthorized');
+        response.status(403).send('Unauthorized');
       });
   }
 
@@ -45,17 +43,17 @@ module.exports = class Server {
    * Run the callback if the user name matches and secret and the associated
    * user id or return 403 on the response.
    *
-   * @param params the incoming URL request parameters, including secret
+   * @param request the incoming URL request parameters, including secret
    * and userName fields.
-   * @param res the HTTP response used to send unauthorized response.
+   * @param response the HTTP response used to send unauthorized response.
    * @param f the callback for successful authorization.
    */
-  checkUserLookupSecret(params, res, f) {
-    const secret = Server.parseRequest(params, params.secret);
-    const userName = Server.parseRequest(params, params.userName);
+  checkUserLookupSecret(request, response, f) {
+    const secret = decodeURIComponent(request.headers['x-access-token']);
+    const { userName } = request.params;
     let userId = -1;
     debug('checkUserLookupSecret', userName);
-    Server.setCors(res);
+    Server.setCors(response);
 
     return this.repo.getUserId(userName)
       .then((id) => {
@@ -66,26 +64,15 @@ module.exports = class Server {
       .then((ok) => {
         if (!ok) {
           debug('checkUserLookupSecret failed', userName, userId);
-          res.status(403).send('Unauthorized');
+          response.status(403).send('Unauthorized');
         } else {
           f();
         }
       })
       .catch((error) => {
         errors('checkUserLookupSecret error', error);
-        res.status(401).send('Authentication error');
+        response.status(401).send('Authentication error');
       });
-  }
-
-  static parseRequest(params, entry) {
-    // do we need this method?  express already decodes request parameters.
-    debug('parseRequest', entry);
-    return decodeURIComponent(entry);
-  }
-
-  static parseRequestObject(params, entry) {
-    debug('parseRequest', entry);
-    return JSON.parse(Server.parseRequest(params, entry));
   }
 
   /**
@@ -119,8 +106,8 @@ module.exports = class Server {
 
   setupNoteAccess() {
     this.router.get(
-      '/note/setAccess/:secret/:user/:note/:access',
-      (req, res, next) => this.checkSecret(req.params, res, () => {
+      '/note/setAccess/:user/:note/:access',
+      (req, res, next) => this.checkSecret(req, res, () => {
         const userId = parseInt(req.params.user, 10);
         const noteId = parseInt(req.params.note, 10);
         const accessMode = parseInt(req.params.access, 10);
@@ -144,19 +131,19 @@ module.exports = class Server {
       });
 
     this.router.get(
-      '/note/create/:secret/:user/:content',
-      (req, res, next) => this.checkSecret(req.params, res, () => {
-        const content = Server.parseRequest(req.params, req.params.content);
+      '/note/create/:user/:content',
+      (req, res, next) => this.checkSecret(req, res, () => {
+        const { content } = req.params;
         return createNote(content, parseInt(req.params.user, 10), res)
           .catch(next);
       }),
     );
 
     this.router.get(
-      '/note/create/:secret/:user/:content/:opts',
-      (req, res, next) => this.checkSecret(req.params, res, () => {
-        const content = Server.parseRequest(req.params, req.params.content);
-        const opts = Server.parseRequestObject(req.params, req.params.opts);
+      '/note/create/:user/:content/:opts',
+      (req, res, next) => this.checkSecret(req, res, () => {
+        const { content } = req.params;
+        const opts = JSON.parse(req.params.opts);
         return createNote(content, parseInt(req.params.user, 10), res, opts)
           .catch(next);
       }),
@@ -165,8 +152,8 @@ module.exports = class Server {
 
   setupNoteDelete() {
     this.router.get(
-      '/note/delete/:secret/:user/:noteId',
-      (req, res, next) => this.checkSecret(req.params, res, () => {
+      '/note/delete/:user/:noteId',
+      (req, res, next) => this.checkSecret(req, res, () => {
         debug('delete', req.params.noteId);
         return this.repo.removeNote(
           parseInt(req.params.noteId, 10),
@@ -183,8 +170,8 @@ module.exports = class Server {
 
   setupNoteGet() {
     this.router.get(
-      '/note/get/:secret/:user/:noteId',
-      (req, res, next) => this.checkSecret(req.params, res, () => {
+      '/note/get/:user/:noteId',
+      (req, res, next) => this.checkSecret(req, res, () => {
         const id = parseInt(req.params.noteId, 10);
         const userId = parseInt(req.params.user, 10);
         return this.repo.getNote(id, userId)
@@ -208,9 +195,9 @@ module.exports = class Server {
 
   setupNoteSearch() {
     this.router.get(
-      '/note/search/:secret/:user/:searchTerm',
+      '/note/search/:user/:searchTerm',
       (req, res) => this.checkSecret(
-        req.params,
+        req,
         res,
         () => this.repo.searchNote(
           req.params.searchTerm,
@@ -234,11 +221,12 @@ module.exports = class Server {
    */
   setupUserCreate() {
     this.router.get(
-      '/user/create/:secret/:userName',
+      '/user/create/:userName',
       (req, res, next) => {
-        const userName = Server.parseRequest(req.params, req.params.userName);
+        const { userName } = req.params;
+        const secret = decodeURIComponent(req.headers['x-access-token']);
         debug('user create', userName);
-        return this.repo.createUser(userName, req.params.secret)
+        return this.repo.createUser(userName, secret)
           .then((id) => {
             debug('user created', id);
             res.status(200).send(id.toString());
@@ -257,16 +245,15 @@ module.exports = class Server {
    */
   setupUserIdGet() {
     this.router.get(
-      '/user/get/:secret/:user/:userName',
+      '/user/get/:user/:userName',
       (req, res, next) => {
-        const userName = Server.parseRequest(req.params, req.params.userName);
+        const { userName } = req.params;
         const userId = parseInt(req.params.user, 10);
 
         const authf = userId > 0
           ? this.checkSecret
           : this.checkUserLookupSecret;
-
-        authf(req.params, res, () => {
+        authf(req, res, () => {
           debug('user get', req.params.user, userName);
           return this.repo.getUserId(userName)
             .then((id) => {
@@ -288,13 +275,13 @@ module.exports = class Server {
    */
   setupUserShareWith() {
     this.router.get(
-      '/user/blocks/:secret/:user/:otherName',
+      '/user/blocks/:user/:otherName',
       (req, res) => this.checkSecret(
-        req.params,
+        req,
         res,
         () => {
           const userId = parseInt(req.params.user, 10);
-          const otherName = Server.parseRequest(req.params, req.params.otherName);
+          const { otherName } = req.params;
           return this.repo.getUserId(otherName)
             .then(otherId => this.repo.userBlocks(userId, otherId))
             .then(() => res.status(200).send(''))
@@ -304,13 +291,13 @@ module.exports = class Server {
     );
 
     this.router.get(
-      '/user/shares/:secret/:user/:otherName',
+      '/user/shares/:user/:otherName',
       (req, res) => this.checkSecret(
-        req.params,
+        req,
         res,
         () => {
           const userId = parseInt(req.params.user, 10);
-          const otherName = Server.parseRequest(req.params, req.params.otherName);
+          const { otherName } = req.params;
           return this.repo.getUserId(otherName)
             .then(otherId => this.repo.userSharesWith(userId, otherId))
             .then(() => res.status(200).send(''))
@@ -320,9 +307,9 @@ module.exports = class Server {
     );
 
     this.router.get(
-      '/user/sharesWith/:secret/:user',
+      '/user/sharesWith/:user',
       (req, res) => this.checkSecret(
-        req.params,
+        req,
         res,
         () => {
           const userId = parseInt(req.params.user, 10);
@@ -342,6 +329,6 @@ module.exports = class Server {
    */
   static setCors(res) {
     res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Headers', 'X-Requested-With');
+    res.header('Access-Control-Allow-Headers', 'X-Requested-With,X-Access-Token');
   }
 };

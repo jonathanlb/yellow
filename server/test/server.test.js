@@ -18,14 +18,6 @@ describe('Test routing instantiation', () => {
           expect(response.statusCode).toBe(200);
         });
     });
-
-    test('parses object arguments', () => {
-      const entry = { access: 0 };
-      const entryStr = encodeURIComponent(JSON.stringify(entry));
-      const params = { opts: entryStr};
-      const response = Server.parseRequestObject(params, entryStr);
-      expect(response).toEqual(entry);
-    });
 });
 
 describe('Test note routing', () => {
@@ -35,7 +27,10 @@ describe('Test note routing', () => {
       then(server => {
         server.repo.checkSecret = () => Promise.resolve(false);
       }).
-      then(() => request(app).get(`/note/create/sEcr3t/noobe/foobar`)).
+      then(() => 
+        request(app).
+          get(`/note/create/noobe/foobar`).
+          set('x-access-token', 'sEcr3t')).
       then(response => {
         expect(response.statusCode).toBe(403);
       });
@@ -46,7 +41,10 @@ describe('Test note routing', () => {
     const content = encodeURIComponent('<h1>My Day</h1><p>Some note</p>');
 
     return createServer(app).
-      then(() => request(app).get(`/note/create/sEcr3t/noobe/${content}`)).
+      then(() =>
+        request(app).
+          get(`/note/create/noobe/${content}`).
+          set('x-access-token', 'sEcr3t')).
       then(response => {
         expect(response.statusCode).toBe(200);
         expect(response.text).toEqual('0');
@@ -59,7 +57,10 @@ describe('Test note routing', () => {
     const opts = encodeURIComponent(JSON.stringify({ access:0 }));
 
     return createServer(app).
-      then(() => request(app).get(`/note/create/sEcr3t/noobe/${content}/${opts}`)).
+      then(() =>
+        request(app).
+          get(`/note/create/noobe/${content}/${opts}`).
+          set('x-access-token', 'sEcr3t')).
       then(response => {
         expect(response.statusCode).toBe(200);
         expect(response.text).toEqual('0');
@@ -72,8 +73,14 @@ describe('Test note routing', () => {
     const content = encodeURIComponent(rawContent);
 
     return createServer(app).
-      then(() => request(app).get(`/note/create/sEcr3t/noobe/${content}`)).
-      then(response => request(app).get('/note/delete/sEcr3t/noobe/0')).
+      then(() =>
+        request(app).
+          get(`/note/create/noobe/${content}`).
+          set('x-access-token', 'sEcr3t')).
+      then(response =>
+        request(app).
+          get('/note/delete/noobe/0').
+          set('x-access-token', 'sEcr3t')).
       then(response => {
         expect(response.statusCode).toBe(200);
         expect(response.text).toEqual('true');
@@ -83,7 +90,10 @@ describe('Test note routing', () => {
   test('Handles note delete failure', () => {
     const app = express();
     return createServer(app).
-      then(() => request(app).get('/note/delete/sEcr3t/noobe/1')).
+      then(() =>
+        request(app).
+          get('/note/delete/noobe/1').
+          set('x-access-token', 'sEcr3t')).
       then(response => {
         expect(response.statusCode).toBe(200);
         expect(response.text).toEqual('false');
@@ -96,8 +106,14 @@ describe('Test note routing', () => {
     const content = encodeURIComponent(rawContent);
 
     return createServer(app).
-      then(() => request(app).get(`/note/create/sEcr3t/noobe/${content}`)).
-      then(response => request(app).get(`/note/get/sEcr3t/noobe/0`)).
+      then(() =>
+        request(app).
+          get(`/note/create/noobe/${content}`).
+          set('x-access-token', 'sEcr3t')).
+      then(response =>
+        request(app).
+          get(`/note/get/noobe/0`).
+          set('x-access-token', 'sEcr3t')).
       then(response => {
         expect(response.statusCode).toBe(200);
         const note = JSON.parse(response.text);
@@ -108,7 +124,10 @@ describe('Test note routing', () => {
   test('Handles note get failure', () => {
     const app = express();
     return createServer(app).
-      then(() => request(app).get(`/note/get/sEcr3t/noobe/1`)).
+      then(() =>
+        request(app).
+          get(`/note/get/noobe/1`).
+          set('x-access-token', 'sEcr3t')).
       then(response => {
         expect(response.statusCode).toBe(404);
       });
@@ -117,7 +136,10 @@ describe('Test note routing', () => {
   test('Handles note privacy updates', () => {
     const app = express();
     return createServer(app).
-      then(() => request(app).get(`/note/setAccess/sEcr3t/19/31/0`)).
+      then(() =>
+        request(app).
+          get(`/note/setAccess/19/31/0`).
+          set('x-access-token', 'sEcr3t')).
       then(response => {
         expect(response.statusCode).toBe(200);
         expect(response.text).toEqual('');
@@ -127,7 +149,10 @@ describe('Test note routing', () => {
   test('Handles note privacy update errors around malformed user id', () => {
     const app = express();
     return createServer(app).
-      then(() => request(app).get(`/note/setAccess/sEcr3t/nineteen/31/0`)).
+      then(() =>
+        request(app).
+          get(`/note/setAccess/nineteen/31/0`).
+          set('x-access-token', 'sEcr3t')).
       then(response => {
         expect(response.statusCode).toBe(500);
         expect(response.text.includes('invalid user id: NaN')).toBe(true);
@@ -141,8 +166,14 @@ describe('Test note routing', () => {
     const search = encodeURIComponent('Some note');
 
     return createServer(app).
-      then(() => request(app).get(`/note/create/sEcr3t/noobe/${content}`)).
-      then(response => request(app).get(`/note/search/sEcr3t/noobe/${search}`)).
+      then(() =>
+        request(app).
+          get(`/note/create/noobe/${content}`).
+          set('x-access-token', 'sEcr3t')).
+      then(response =>
+        request(app).
+          get(`/note/search/noobe/${search}`).
+          set('x-access-token', 'sEcr3t')).
       then(response => {
         expect(response.statusCode).toBe(200);
         expect(response.text).toEqual(JSON.stringify([0]));
@@ -154,7 +185,10 @@ describe('Test note routing', () => {
     const search = encodeURIComponent('Some note');
 
     return createServer(app).
-      then(() => request(app).get(`/note/search/sEcr3t/noobe/${search}`)).
+      then(() =>
+        request(app).
+          get(`/note/search/noobe/${search}`).
+          set('x-access-token', 'sEcr3t')).
       then(response => {
         expect(response.statusCode).toBe(200);
         expect(response.text).toEqual('[]');
@@ -164,37 +198,22 @@ describe('Test note routing', () => {
 });
 
 describe('Test user routing', () => {
-  test('Handles user create', () => {
-    const app = express();
-    const user = encodeURIComponent('The "Real" Twit');
-
-    return createServer(app).
-      then(() => request(app).get(`/user/create/sEcr3t/${user}`)).
-      then(response => {
-        expect(response.statusCode).toBe(200);
-        expect(response.text).toEqual('0');
-      });
-  });
-
-  test('Disables user create route', () => {
-    const app = express();
-    const user = encodeURIComponent('The "Real" Twit');
-    const secret = 'sEcr3t';
-
-    return createServer(app, {}).
-      then(() => request(app).get(`/user/create/${secret}/${user}`)).
-      then((response) =>
-        expect(response.statusCode).toBe(404));
-  })
-
   test('Handles user bootstrap get success', () => {
     const app = express();
     const user = encodeURIComponent('The "Real" Twit');
     const secret = 'sEcr3t';
 
     return createServer(app).
-      then(() => request(app).get(`/user/create/${secret}/${user}`)).
-      then(response => request(app).get(`/user/get/${secret}/-1/${user}`)).
+      then(() =>
+        request(app).
+          get(`/user/create/${user}`).
+          set('x-access-token', secret)).
+      then(response =>
+        expect(response.statusCode).toBe(200)).
+      then(() =>
+        request(app).
+          get(`/user/get/-1/${user}`).
+          set('x-access-token', secret)).
       then(response => {
         expect(response.statusCode).toBe(200);
         expect(response.text).toEqual('0');
@@ -209,7 +228,10 @@ describe('Test user routing', () => {
     return createServer(app).
       then(server =>
         server.repo.checkSecret = () => Promise.resolve(false)).
-      then(() => request(app).get(`/user/get/${secret}/-1/${user}`)).
+      then(() =>
+        request(app).
+          get(`/user/get/-1/${user}`).
+          set('x-access-token', secret)).
       then(response =>
         expect(response.statusCode).toBe(403));
   });
@@ -220,8 +242,14 @@ describe('Test user routing', () => {
     const secret = 'sEcr3t';
 
     return createServer(app).
-      then(() => request(app).get(`/user/create/${secret}/${user}`)).
-      then(response => request(app).get(`/user/get/${secret}/0/${user}`)).
+      then(() =>
+        request(app).
+          get(`/user/create/${user}`).
+          set('x-access-token', secret)).
+      then(response =>
+        request(app).
+          get(`/user/get/0/${user}`).
+          set('x-access-token', secret)).
       then(response => {
         expect(response.statusCode).toBe(200);
         expect(response.text).toEqual('0');
@@ -231,7 +259,10 @@ describe('Test user routing', () => {
   test('Handles user get failure', () => {
     const app = express();
     return createServer(app).
-      then(() => request(app).get(`/user/get/sEcr3t/1/noobe`)).
+      then(() =>
+        request(app).
+          get(`/user/get/1/noobe`).
+          set('x-access-token', 'sEcr3t')).
       then(response => {
         expect(response.statusCode).toBe(404);
       });
@@ -242,7 +273,10 @@ describe('Test user routing', () => {
     const userName = encodeURIComponent('The "Real" Twit');
 
     return createServer(app).
-      then(() => request(app).get(`/user/blocks/secret/19/${userName}`)).
+      then(() =>
+        request(app).
+          get(`/user/blocks/19/${userName}`).
+          set('x-access-token', 'secret')).
       then(response => {
         expect(response.statusCode).toBe(200);
         expect(response.text).toEqual('');
@@ -254,7 +288,10 @@ describe('Test user routing', () => {
     const userName = encodeURIComponent('The "Real" Twit');
 
     return createServer(app).
-      then(() => request(app).get(`/user/blocks/secret/nineteen/${userName}`)).
+      then(() =>
+        request(app).
+          get(`/user/blocks/nineteen/${userName}`).
+          set('x-access-token', 'secret')).
       then(response => {
         expect(response.statusCode).toBe(400);
         expect(response.text).toEqual('invalid userId: NaN');
@@ -266,7 +303,10 @@ describe('Test user routing', () => {
     const userName = encodeURIComponent('My #1 Friend');
 
     return createServer(app).
-      then(() => request(app).get(`/user/shares/secret/19/${userName}`)).
+      then(() =>
+        request(app).
+          get(`/user/shares/19/${userName}`).
+          set('x-access-token', 'secret')).
       then(response => {
         expect(response.statusCode).toBe(200);
         expect(response.text).toEqual('');
@@ -278,7 +318,10 @@ describe('Test user routing', () => {
     const userName = encodeURIComponent('My #1 Friend');
 
     return createServer(app).
-      then(() => request(app).get(`/user/shares/secret/nineteen/${userName}`)).
+      then(() =>
+        request(app).
+          get(`/user/shares/nineteen/${userName}`).
+          set('x-access-token', 'secret')).
       then(response => {
         expect(response.statusCode).toBe(400);
         expect(response.text).toEqual('invalid userId: NaN');
@@ -288,7 +331,10 @@ describe('Test user routing', () => {
   test('Handles user get sharing partners', () => {
     const app = express();
     return createServer(app).
-      then(() => request(app).get(`/user/sharesWith/secret/19`)).
+      then(() =>
+        request(app).
+          get(`/user/sharesWith/19`).
+          set('x-access-token', 'secret')).
       then(response => {
         expect(response.statusCode).toBe(200);
         expect(response.text).toEqual('[]');
@@ -298,7 +344,10 @@ describe('Test user routing', () => {
   test('Handles user get sharing partners error from malformed user id', () => {
     const app = express();
     return createServer(app).
-      then(() => request(app).get(`/user/sharesWith/secret/nineteen`)).
+      then(() =>
+        request(app).
+          get(`/user/sharesWith/nineteen`).
+          set('x-access-token', 'secret')).
       then(response => {
         expect(response.statusCode).toBe(400);
         expect(response.text).toEqual('invalid userId: NaN');
