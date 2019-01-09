@@ -18,7 +18,6 @@ module.exports = class App {
     this.discardNotes();
     this.contentSelector = opts.contentSelector || 'main-app';
     this.lastError = undefined;
-    this.secret = undefined;
     this.serverPrefix = App.getServerPrefix(opts);
     this.userId = -1;
     this.userName = undefined;
@@ -54,8 +53,8 @@ module.exports = class App {
   async createNote(content, opts) {
     const escapedContent = encodeURIComponent(content);
     const optStr = opts ? `/${encodeURIComponent(JSON.stringify(opts))}` : '';
-    const cmd = `${this.serverPrefix}note/create/${this.secret}/${this.userId}/${escapedContent}${optStr}`;
-    return fetch(cmd)
+    const cmd = `${this.serverPrefix}note/create/${this.userId}/${escapedContent}${optStr}`;
+    return fetch(cmd, this.fetchOpts)
       .then((response) => {
         if (response.status === 200) {
           return response.text()
@@ -76,8 +75,8 @@ module.exports = class App {
 
   async doSearch(searchQuery) {
     const query = encodeURIComponent(searchQuery);
-    const cmd = `${this.serverPrefix}note/search/${this.secret}/${this.userId}/${query}`;
-    return fetch(cmd)
+    const cmd = `${this.serverPrefix}note/search/${this.userId}/${query}`;
+    return fetch(cmd, this.fetchOpts)
       .then((response) => {
         if (response.status === 200) {
           return response.json()
@@ -97,16 +96,16 @@ module.exports = class App {
   }
 
   async getFriends() {
-    const cmd = `${this.serverPrefix}user/sharesWith/${this.secret}/${this.userId}`;
+    const cmd = `${this.serverPrefix}user/sharesWith/${this.userId}`;
     debug('getFriends');
-    return fetch(cmd)
+    return fetch(cmd, this.fetchOpts)
       .then(response => response.json());
   }
 
   async loadCard(id) {
     debug('loadCard', id);
-    const cmd = `${this.serverPrefix}note/get/${this.secret}/${this.userId}/${id}`;
-    return fetch(cmd)
+    const cmd = `${this.serverPrefix}note/get/${this.userId}/${id}`;
+    return fetch(cmd, this.fetchOpts)
       .then(response => response.json())
       .then((cardInfo) => {
         debug('loadedCard', cardInfo);
@@ -121,16 +120,16 @@ module.exports = class App {
   async logout() {
     this.userId = -1;
     this.userName = undefined;
-    this.secret = undefined;
+    this.fetchOpts.headers = {};
     this.discardNotes();
     return this.render(Views.login);
   }
 
   async lookupBootstrapUserId() {
-    const { userName, secret } = this;
-    const cmd = `${this.serverPrefix}user/get/${secret}/-1/${userName}`;
+    const { userName } = this;
+    const cmd = `${this.serverPrefix}user/get/-1/${userName}`;
     debug('lookupBootstrapUserId', userName);
-    return fetch(cmd)
+    return fetch(cmd, this.fetchOpts)
       .then((response) => {
         if (response.status === 200) {
           return response.text()
@@ -140,7 +139,6 @@ module.exports = class App {
               if (Number.isFinite(userId)) {
                 this.userId = userId;
                 this.userName = userName;
-                this.secret = secret;
                 return this.doPostLoginAction();
               }
               errors('lookupBootstrapUserId parse error', response.body);
@@ -153,9 +151,9 @@ module.exports = class App {
   }
 
   async removeFriend(friendName) {
-    const cmd = `${this.serverPrefix}user/blocks/${this.secret}/${this.userId}/${friendName}`;
+    const cmd = `${this.serverPrefix}user/blocks/${this.userId}/${friendName}`;
     debug('unfriend', friendName);
-    return fetch(cmd);
+    return fetch(cmd, this.fetchOpts);
   }
 
   render(viewOpt) {
@@ -201,20 +199,24 @@ module.exports = class App {
 
     if (userName && password) {
       this.userName = userName;
-      this.secret = encodeURIComponent(password); // XXX avoid storing password
+      this.fetchOpts.headers['x-access-token'] = encodeURIComponent(password); // XXX avoid storing password
       return this.lookupBootstrapUserId();
     }
     return this.render(App.getDefaultView());
   }
 
   async setup() {
+    this.fetchOpts = {
+      cache: 'no-cache',
+      headers: {},
+    };
     this.render();
   }
 
   async shareWith(friendName) {
-    const cmd = `${this.serverPrefix}user/shares/${this.secret}/${this.userId}/${friendName}`;
+    const cmd = `${this.serverPrefix}user/shares/${this.userId}/${friendName}`;
     debug('shareWith', friendName);
-    return fetch(cmd);
+    return fetch(cmd, this.fetchOpts);
   }
 
   unloadCard(cardId) {

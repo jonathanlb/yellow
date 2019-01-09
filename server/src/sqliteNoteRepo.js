@@ -36,7 +36,7 @@ module.exports = class SqliteNoteRepo {
     const result = await this.db.allAsync(query);
     debug('checkSecret', result);
     const ok = result.length > 0
-      && bcrypt.compare(secret, result[0].secret);
+      && await bcrypt.compare(secret, result[0].secret) === true;
     debug('checkSecret', ok);
     return ok;
   }

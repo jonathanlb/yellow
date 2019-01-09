@@ -105,14 +105,14 @@ describe('Application framework', () => {
     return app.setup()
       .then(() => {
         app.userId = userId;
-        app.secret = secret;
+        app.fetchOpts.headers['x-access-token'] = secret;
         return app.loadCard(cardId);
       })
       .then(() => app.render(Views.view))
       .then(() => {
         expect(global.fetch.mock.calls.length).toBe(1);
         expect(global.fetch.mock.calls[0][0])
-          .toEqual(`http://localhost:3000/note/get/${secret}/${userId}/${cardId}`);
+          .toEqual(`http://localhost:3000/note/get/${userId}/${cardId}`);
 
         const content = document.getElementById(selector).innerHTML;
         expect(content.includes(message), `Looking for card in ${content}`)
@@ -146,13 +146,13 @@ describe('Application framework', () => {
     return app.setup()
       .then(() => {
         app.userId = 11;
-        app.secret = 'asdf';
+        app.fetchOpts.headers['x-access-token'] = 'secret';
         app.userName = 'Bozo';
         return app.logout();
       })
       .then(() => {
         expect(app.userId).toBe(-1);
-        expect(app.secret).toBeUndefined();
+        expect(app.fetchOpts.headers['x-access-token']).toBeUndefined();
         expect(app.userName).toBeUndefined();
       });
   });
@@ -183,13 +183,13 @@ describe('Application framework', () => {
       })
       .then(() => {
         app.userId = userId;
-        app.secret = secret;
+        app.fetchOpts.headers['x-access-token'] = secret;
         return app.doSearch(query);
       })
       .then(() => {
         expect(global.fetch.mock.calls.length, 'search + 3 cards').toBe(4);
         expect(global.fetch.mock.calls[0][0])
-          .toEqual(`http://localhost:3000/note/search/${secret}/${userId}/${encodeURIComponent(query)}`);
+          .toEqual(`http://localhost:3000/note/search/${userId}/${encodeURIComponent(query)}`);
         expect(document.getElementsByClassName('cardContainer').length).toBe(3);
       });
   });

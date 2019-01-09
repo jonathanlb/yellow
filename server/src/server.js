@@ -24,7 +24,6 @@ module.exports = class Server {
   checkSecret(request, response, f) {
     const secret = decodeURIComponent(request.headers['x-access-token']);
     const userId = parseInt(request.params.user, 10);
-    Server.setCors(response);
     return this.repo.checkSecret(secret, userId)
       .then((ok) => {
         if (!ok) {
@@ -53,7 +52,6 @@ module.exports = class Server {
     const { userName } = request.params;
     let userId = -1;
     debug('checkUserLookupSecret', userName);
-    Server.setCors(response);
 
     return this.repo.getUserId(userName)
       .then((id) => {
@@ -319,16 +317,5 @@ module.exports = class Server {
         },
       ),
     );
-  }
-
-  /**
-   * Allow cross-origin requests for development use.
-   * TODO: install switch on production/development; lock down to localhost.
-   *
-   * @param res The Express response in wiring.
-   */
-  static setCors(res) {
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Headers', 'X-Requested-With,X-Access-Token');
   }
 };
