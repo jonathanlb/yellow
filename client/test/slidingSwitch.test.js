@@ -1,3 +1,7 @@
+/**
+ * @jest-environment jsdom
+ */
+
 const slidingSwitch = require('../views/slidingSwitch');
 
 describe('Sliding Switch component', () => {

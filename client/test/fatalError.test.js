@@ -1,3 +1,7 @@
+/**
+ * @jest-environment jsdom
+ */
+
 const error = require('../views/fatalError');
 
 describe('Fatal Error component', () => {

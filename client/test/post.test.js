@@ -1,3 +1,7 @@
+/**
+ * @jest-environment jsdom
+ */
+
 const post = require('../views/post');
 
 describe('Post component', () => {

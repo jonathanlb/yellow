@@ -1,3 +1,7 @@
+/**
+ * @jest-environment jsdom
+ */
+
 global.fetch = require('jest-fetch-mock');
 const App = require('../src/app');
 const Views = require('../views/views');

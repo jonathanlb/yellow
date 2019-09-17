@@ -1,3 +1,7 @@
+/**
+ * @jest-environment jsdom
+ */
+
 const search = require('../views/search');
 
 describe('Search component', () => {

@@ -1,3 +1,7 @@
+/**
+ * @jest-environment jsdom
+ */
+
 const renderCard = require('../views/card');
 
 describe('Card component', () => {

@@ -1,3 +1,7 @@
+/**
+ * @jest-environment jsdom
+ */
+
 const header = require('../views/header');
 const Views = require('../views/views');
 

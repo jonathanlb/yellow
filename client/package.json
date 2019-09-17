@@ -26,7 +26,7 @@
     "eslint-plugin-import": "^2.14.0",
     "eslint-plugin-jsx-a11y": "^6.1.2",
     "eslint-plugin-react": "^7.12.3",
-    "jest-cli": "^23.6.0",
+    "jest-cli": "^24.9.0",
     "jest-expect-message": "^1.0.2",
     "jest-fetch-mock": "^1.7.5",
     "shelljs": "^0.8.3",
@@ -35,7 +35,7 @@
   },
   "dependencies": {
     "debug": "^3.2.6",
-    "marked": "^0.6.1",
+    "marked": "^0.7.0",
     "yo-yo": "^1.4.1"
   }
 }

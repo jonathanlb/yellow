@@ -1,3 +1,7 @@
+/**
+ * @jest-environment jsdom
+ */
+
 const login = require('../views/login');
 
 describe('Login component', () => {
