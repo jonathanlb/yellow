@@ -1,11 +1,9 @@
-const bcrypt = require('bcrypt');
 const debug = require('debug')('sqliteNoteRepo');
 const errors = require('debug')('sqliteNoteRepo:error');
 const sqlite3 = require('sqlite3-promise').verbose();
 const dbs = require('./dbCommon');
 const Query = require('./queryParser');
 
-const SALT_ROUNDS = 10;
 /**
  * Note repository upon SqLite3.
  * Does not work from ChromeOS -- "relocatable text" error upon
@@ -25,20 +23,6 @@ module.exports = class SqliteNoteRepo {
         }
       },
     );
-  }
-
-  /**
-   * Check the secret against the user id.
-   */
-  async checkSecret(secret, user) {
-    const query = `SELECT secret FROM users WHERE ${user} = rowid`;
-    dbs.requireInt(user, 'checkSecret:user');
-    const result = await this.db.allAsync(query);
-    debug('checkSecret', result);
-    const ok = result.length > 0
-      && await bcrypt.compare(secret, result[0].secret) === true;
-    debug('checkSecret', ok);
-    return ok;
   }
 
   close() {
@@ -65,11 +49,10 @@ module.exports = class SqliteNoteRepo {
   /**
    * Create a new user, returning the associated id.
    */
-  async createUser(userName, secret) {
+  async createUser(userName) {
     debug('createUser', userName);
     const escapedUserName = dbs.escapeQuotes(userName);
-    const escapedSecret = await bcrypt.hash(secret, SALT_ROUNDS);
-    let query = `INSERT INTO users(userName, secret) VALUES ('${escapedUserName}', '${escapedSecret}')`;
+    let query = `INSERT INTO users(userName) VALUES ('${escapedUserName}')`;
     debug(query);
     await this.db.runAsync(query);
     const result = await this.lastId();
@@ -230,7 +213,7 @@ module.exports = class SqliteNoteRepo {
   async setup() {
     return [
       'CREATE TABLE IF NOT EXISTS notes (author INT, content TEXT, created INT, privacy INT, renderHint INT)',
-      'CREATE TABLE IF NOT EXISTS users (userName TEXT, secret TEXT)',
+      'CREATE TABLE IF NOT EXISTS users (userName TEXT)',
       'CREATE TABLE IF NOT EXISTS sharing (user INT, sharesWith INT, UNIQUE(user, sharesWith))',
       'CREATE INDEX IF NOT EXISTS idx_shares_with ON sharing (sharesWith)',
       'CREATE INDEX IF NOT EXISTS idx_sharing_users ON sharing (user)',

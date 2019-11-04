@@ -24,6 +24,7 @@
     "debug": "^3.2.6",
     "express": "^4.16.4",
     "pg-promise": "^8.5.4",
+    "simple-auth": "git://github.com/jonathanlb/simple-auth",
     "sqlite3": "^4.0.4",
     "sqlite3-promise": "git://github.com/jonathanlb/node-sqlite3-promise.git#v2.0.0"
   },

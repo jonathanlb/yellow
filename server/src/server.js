@@ -3,12 +3,13 @@ const errors = require('debug')('server:error');
 const express = require('express');
 
 module.exports = class Server {
-  constructor(router, repo, opts) {
+  constructor(router, repo, auth, opts) {
+    this.auth = auth;
     this.router = router;
     this.repo = repo;
     this.opts = opts || {};
 
-    ['checkSecret', 'checkUserLookupSecret']
+    ['checkSecret']
       .forEach((m) => { this[m] = this[m].bind(this); });
   }
 
@@ -21,56 +22,41 @@ module.exports = class Server {
    * @param res the HTTP response used to send unauthorized response.
    * @param f the callback for successful authorization.
    */
-  checkSecret(request, response, f) {
+  async checkSecret(request, response, f) {
     const secret = decodeURIComponent(request.headers['x-access-token']);
     const userId = parseInt(request.params.user, 10);
-    return this.repo.checkSecret(secret, userId)
-      .then((ok) => {
-        if (!ok) {
-          response.status(403).send('Unauthorized');
-        } else {
-          f();
-        }
-      })
-      .catch((err) => {
-        errors('checkSecret', err.message);
+    try {
+      const credentials = {
+        id: userId,
+        session: secret,
+      };
+      const sessionOK = await this.auth.authenticateSession(credentials);
+      if (sessionOK) {
+        return f();
+      }
+    } catch (e) {
+      errors('checkSecret session', e.message);
+      response.status(440).send('Session expired');
+      return false;
+    }
+
+    try {
+      const credentials = {
+        id: userId,
+        password: secret,
+      };
+      const userOK = await this.auth.authenticateUser(credentials);
+      if (!userOK || !userOK.session) {
         response.status(403).send('Unauthorized');
-      });
-  }
-
-  /**
-   * Run the callback if the user name matches and secret and the associated
-   * user id or return 403 on the response.
-   *
-   * @param request the incoming URL request parameters, including secret
-   * and userName fields.
-   * @param response the HTTP response used to send unauthorized response.
-   * @param f the callback for successful authorization.
-   */
-  checkUserLookupSecret(request, response, f) {
-    const secret = decodeURIComponent(request.headers['x-access-token']);
-    const { userName } = request.params;
-    let userId = -1;
-    debug('checkUserLookupSecret', userName);
-
-    return this.repo.getUserId(userName)
-      .then((id) => {
-        userId = id;
-        debug('checkUserLookupSecret', userId, userName);
-        return this.repo.checkSecret(secret, userId);
-      })
-      .then((ok) => {
-        if (!ok) {
-          debug('checkUserLookupSecret failed', userName, userId);
-          response.status(403).send('Unauthorized');
-        } else {
-          f();
-        }
-      })
-      .catch((error) => {
-        errors('checkUserLookupSecret error', error);
-        response.status(401).send('Authentication error');
-      });
+        return false;
+      }
+      // XXX pass back userOK.session
+      return f();
+    } catch (e) {
+      errors('checkSecret user', e.message);
+      response.status(440).send('Unauthorized');
+      return false;
+    }
   }
 
   /**
@@ -244,25 +230,22 @@ module.exports = class Server {
   setupUserIdGet() {
     this.router.get(
       '/user/get/:user/:userName',
-      (req, res, next) => {
+      async (req, res) => {
         const { userName } = req.params;
-        const userId = parseInt(req.params.user, 10);
+        let userId = parseInt(req.params.user, 10);
 
-        const authf = userId > 0
-          ? this.checkSecret
-          : this.checkUserLookupSecret;
-        authf(req, res, () => {
+        if (userId <= 0) {
+          userId = await this.repo.getUserId(userName);
+        }
+        this.checkSecret(req, res, async () => {
           debug('user get', req.params.user, userName);
-          return this.repo.getUserId(userName)
-            .then((id) => {
-              debug('retrieved user', id);
-              if (id >= 0) {
-                res.status(200).send(id.toString());
-              } else {
-                res.status(404).send(`Not found: ${userName}`);
-              }
-            })
-            .catch(next);
+          const id = await this.repo.getUserId(userName);
+          debug('retrieved user', id);
+          if (id >= 0) {
+            res.status(200).send(id.toString());
+          } else {
+            res.status(404).send(`Not found: ${userName}`);
+          }
         });
       },
     );

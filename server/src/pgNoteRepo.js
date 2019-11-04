@@ -1,12 +1,9 @@
-const bcrypt = require('bcrypt');
 const debug = require('debug')('pgRepo');
 const errors = require('debug')('pgRepo:error');
 const os = require('os');
 const pg = require('pg-promise');
 const dbs = require('./dbCommon');
 const Query = require('./queryParser');
-
-const SALT_ROUNDS = 10;
 
 /**
  * Note repository upon postgres.
@@ -22,25 +19,6 @@ module.exports = class PgRepo {
       },
       opts,
     );
-  }
-
-  /**
-   * Check the secret against the user id.
-   */
-  async checkSecret(secret, user) {
-    debug('checkSecret:user', user);
-    dbs.requireInt(user, 'checkSecret');
-    const query = `SELECT secret FROM users WHERE ${user} = id`;
-    debug(query);
-    const result = await this.db.one(query);
-    const ok = result
-      && bcrypt.compare(result.secret, secret);
-    debug('checkSecret', ok);
-    return ok;
-  }
-
-  // eslint-disable-next-line class-methods-use-this
-  close() {
   }
 
   /**
@@ -60,15 +38,14 @@ module.exports = class PgRepo {
       .then(row => row.id);
   }
 
-  async createUser(userName, secret) {
+  async createUser(userName) {
     debug('createUser', userName);
     const escapedUserName = dbs.escapeQuotes(userName);
-    const escapedSecret = await bcrypt.hash(secret, SALT_ROUNDS);
-    const query = 'INSERT INTO users(userName, secret) '
-      + `values ('${escapedUserName}', '${escapedSecret}') RETURNING id`;
+    const query = 'INSERT INTO users(userName) '
+      + `values ('${escapedUserName}') RETURNING id`;
     debug(query);
-    return this.db.one(query)
-      .then(row => row.id);
+    const row = await this.db.one(query);
+    return row.id;
   }
 
   /**
@@ -201,7 +178,7 @@ module.exports = class PgRepo {
 
     return [
       'CREATE TABLE IF NOT EXISTS notes (author INT, content TEXT, created INT, id SERIAL PRIMARY KEY, privacy INT, renderHint INT)',
-      'CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, secret TEXT, userName TEXT)',
+      'CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, userName TEXT)',
       'CREATE TABLE IF NOT EXISTS sharing (author INT NOT NULL, sharesWith INT NOT NULL, UNIQUE(author, sharesWith))',
       'CREATE INDEX IF NOT EXISTS idx_shares_with ON sharing (sharesWith)',
       'CREATE INDEX IF NOT EXISTS idx_sharing_users ON sharing (author)',

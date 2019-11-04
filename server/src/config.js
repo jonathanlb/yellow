@@ -1,4 +1,5 @@
 const config = {
+  auth: 'simple-auth',
   db: 'sqlite',
   // db: 'postgres',
   postgres: {
@@ -6,12 +7,29 @@ const config = {
     host: 'localhost',
     user: 'u0_a62',
   },
+  simpleAuth: {
+    dbFileName: 'data/users.db',
+    privateKeyFileName: 'data/jwtRS256.key',
+    publicKeyFileName: 'data/jwtRS256.key.pub',
+  },
   sqlite: {
     file: 'data/notes.db', // relative to server root
   },
 };
 
 module.exports = {
+  auth: () => {
+    let Auth;
+    switch (config.auth.toLowerCase().replace(/[-_ ]/g, '')) {
+      case 'simpleauth':
+        // eslint-disable-next-line global-require
+        Auth = require('simple-auth');
+        return new Auth(config.simpleAuth);
+      default:
+        throw new Error(`unknown auth type ${config.auth}`);
+    }
+  },
+
   repo: () => {
     let Repo;
     switch (config.db.toLowerCase()) {

@@ -3,6 +3,7 @@ const debug = require('debug')('index');
 const config = require('./config');
 const Server = require('./server');
 
+const auth = config.auth();
 const repo = config.repo();
 const router = express();
 
@@ -14,7 +15,7 @@ router.use((req, res, next) => {
   next();
 });
 
-const server = new Server(router, repo);
+const server = new Server(router, repo, auth);
 const port = process.env.PORT || 3000;
 
 server.setup()

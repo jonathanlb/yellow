@@ -297,28 +297,6 @@ describe('Test SqLite3 note repository', () => {
       });
   });
 
-  test('Uses secrets', () => {
-    const repo = new Repo({});
-    const userName = 'Jonathan';
-    const secret = 's3cr3T';
-    var userId = -1;
-
-    return repo.setup().
-      then(() => repo.createUser(userName, secret)).
-      then(id => userId = id).
-      then(() => repo.checkSecret(secret, userId)).
-      then(result => expect(result, 'expected secretCheck OK').toBe(true)).
-      then(() => repo.checkSecret(secret + 'foo', userId)).
-      then(result => expect(result, 'expected secretCheck to fail from bad secret').toBe(false)).
-      then(() => repo.checkSecret(secret, userId + 1)).
-      then(result => expect(result, 'expected secretCheck to fail from bad id').toBe(false)).
-      then(() => repo.close()).
-      catch(e => {
-        repo.close();
-        throw e;
-      });
-  });
-
   test('Has method implementations', () => {
     const repo = new Repo({});
     RepoStub.checkMethodNames(repo);

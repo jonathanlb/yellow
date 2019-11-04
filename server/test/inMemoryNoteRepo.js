@@ -10,7 +10,6 @@ module.exports = class InMemoryRepo {
    */
   static checkMethodNames(repo) {
     const methodNames = [
-      'checkSecret',
       'createNote',
       'createUser',
       'getNote',
@@ -36,13 +35,6 @@ module.exports = class InMemoryRepo {
   constructor() {
     this.content = [];
     this.users = [];
-  }
-
-  /**
-   * Check the secret against the user id.
-   */
-  async checkSecret(secret, user) {
-    return true;
   }
 
   /**
