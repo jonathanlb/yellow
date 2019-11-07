@@ -50,7 +50,7 @@ module.exports = class Server {
         response.status(403).send('Unauthorized');
         return false;
       }
-      // XXX pass back userOK.session
+      response.set('x-access-token', userOK.session);
       return f();
     } catch (e) {
       errors('checkSecret user', e.message);

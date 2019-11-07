@@ -107,7 +107,6 @@ describe('Test note routing', () => {
     const content = encodeURIComponent('<h1>My Day</h1><p>Some note</p>');
     const opts = encodeURIComponent(JSON.stringify({ access:0 }));
 		const server = await createServer(app);
-    server.auth.authenticateSession = stubFalseAuthenticateSession;
 
 		const response = await request(app).
 			get(`/note/create/noobe/${content}/${opts}`).
@@ -120,9 +119,7 @@ describe('Test note routing', () => {
     const app = express();
     const rawContent = '<h1>My Day</h1><p>Some note</p>';
     const content = encodeURIComponent(rawContent);
-
     const server = await createServer(app);
-    server.auth.authenticateSession = stubFalseAuthenticateSession;
 
     await request(app).
       get(`/note/create/noobe/${content}`).
@@ -227,15 +224,18 @@ describe('Test user routing', () => {
     const user = encodeURIComponent('The "Real" Twit');
     const secret = 'sEcr3t';
 
-		await createServer(app);
+		const server = await createServer(app);
 		let response = await request(app).
 			get(`/user/create/${user}`).
 			set('x-access-token', secret);
 		expect(response.statusCode).toBe(200);
+
+		server.auth.authenticateSession = stubFalseAuthenticateSession;
 		response = await request(app).
 			get(`/user/get/-1/${user}`).
 			set('x-access-token', secret);
 		expect(response.statusCode).toBe(200);
+		expect(response.get('x-access-token')).toEqual('abcde');
 		expect(response.text).toEqual('0');
 	});
 
