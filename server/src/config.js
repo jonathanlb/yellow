@@ -18,13 +18,15 @@ const config = {
 };
 
 module.exports = {
-  auth: () => {
-    let Auth;
+  auth: async () => {
     switch (config.auth.toLowerCase().replace(/[-_ ]/g, '')) {
       case 'simpleauth':
-        // eslint-disable-next-line global-require
-        Auth = require('simple-auth');
-        return new Auth(config.simpleAuth);
+        // eslint-disable-next-line
+        const SimpleAuth = require('simple-auth');
+        // eslint-disable-next-line
+        const auth = new SimpleAuth.SimpleAuth(config.simpleAuth);
+        await auth.setup();
+        return auth;
       default:
         throw new Error(`unknown auth type ${config.auth}`);
     }

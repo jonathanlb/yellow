@@ -129,25 +129,26 @@ module.exports = class App {
     const { userName } = this;
     const cmd = `${this.serverPrefix}user/get/-1/${userName}`;
     debug('lookupBootstrapUserId', userName);
-    return fetch(cmd, this.fetchOpts)
-      .then((response) => {
-        if (response.status === 200) {
-          return response.text()
-            .then((idText) => {
-              debug('lookupBootstrapUserId', idText, userName);
-              const userId = parseInt(idText, 10);
-              if (Number.isFinite(userId)) {
-                this.userId = userId;
-                this.userName = userName;
-                return this.doPostLoginAction();
-              }
-              errors('lookupBootstrapUserId parse error', response.body);
-              return this.render(Views.login);
-            });
+    const response = await fetch(cmd, this.fetchOpts);
+    if (response.status === 200) {
+      const idText = await response.text();
+      debug('lookupBootstrapUserId', idText, userName);
+      const userId = parseInt(idText, 10);
+      if (Number.isFinite(userId)) {
+        this.userId = userId;
+        this.userName = userName;
+        const session = response.headers.get('x-access-token');
+        if (session) {
+          debug('overwriting password with session key');
+          this.fetchOpts.headers['x-access-token'] = encodeURIComponent(session);
         }
-        errors('Cannot look up user name', userName);
-        return this.render(Views.login);
-      });
+        return this.doPostLoginAction();
+      }
+      errors('lookupBootstrapUserId parse error', response.body);
+      return this.render(Views.login);
+    }
+    errors('Cannot look up user name', userName);
+    return this.render(Views.login);
   }
 
   async removeFriend(friendName) {
@@ -199,7 +200,8 @@ module.exports = class App {
 
     if (userName && password) {
       this.userName = userName;
-      this.fetchOpts.headers['x-access-token'] = encodeURIComponent(password); // XXX avoid storing password
+      // we'll overwrite later with session key
+      this.fetchOpts.headers['x-access-token'] = encodeURIComponent(password);
       return this.lookupBootstrapUserId();
     }
     return this.render(App.getDefaultView());

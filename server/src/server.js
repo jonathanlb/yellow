@@ -50,10 +50,11 @@ module.exports = class Server {
         response.status(403).send('Unauthorized');
         return false;
       }
-      response.set('x-access-token', userOK.session);
+      debug('responding with session', userId, userOK.session);
+      response.header('x-access-token', userOK.session);
       return f();
     } catch (e) {
-      errors('checkSecret user', e.message);
+      errors('checkSecret user', e);
       response.status(440).send('Unauthorized');
       return false;
     }
@@ -236,17 +237,28 @@ module.exports = class Server {
 
         if (userId <= 0) {
           userId = await this.repo.getUserId(userName);
-        }
-        this.checkSecret(req, res, async () => {
-          debug('user get', req.params.user, userName);
-          const id = await this.repo.getUserId(userName);
-          debug('retrieved user', id);
-          if (id >= 0) {
-            res.status(200).send(id.toString());
+          if (userId !== undefined) {
+            userId = userId.toString();
+            req.params.user = userId;
+            debug('user bootstrap', userId, userName);
+            this.checkSecret(req, res, async () => {
+              res.status(200).send(userId);
+            });
           } else {
             res.status(404).send(`Not found: ${userName}`);
           }
-        });
+        } else {
+          this.checkSecret(req, res, async () => {
+            debug('user get', req.params.user, userName);
+            const id = await this.repo.getUserId(userName);
+            debug('retrieved user', id);
+            if (id >= 0) {
+              res.status(200).send(id.toString());
+            } else {
+              res.status(404).send(`Not found: ${userName}`);
+            }
+          });
+        }
       },
     );
   }
