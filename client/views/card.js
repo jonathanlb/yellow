@@ -1,4 +1,5 @@
 /* eslint indent: 0 */
+const DOMPurify = require('dompurify');
 const marked = require('marked');
 const yo = require('yo-yo');
 
@@ -67,9 +68,8 @@ module.exports = (cardInfo) => {
   const contentElt = Array.from(result.children)
     .find(x => x.id === contentId);
   if (cardInfo.renderHint === RENDER_MD) {
-    // XXX marked sets markdown element ids. Should we worry about collisions?
     contentElt.innerHTML = `<div class="cardContent" id="${contentId}" >
-      ${marked(cardInfo.content, { sanitize: true })}
+      ${DOMPurify.sanitize(marked(cardInfo.content))}
       </div>`;
   } else {
     // rely on yo-yo to sanitize content

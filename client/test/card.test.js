@@ -43,7 +43,7 @@ describe('Card component', () => {
     cardInfo.renderHint = 1;
     const elt = renderCard(cardInfo);
 
-    expect(elt.innerHTML.includes('<h1 id="title">Title</h1>'),
+    expect(elt.innerHTML.includes('<h1>Title</h1>'),
       `no markdown: ${elt.innerHTML}`)
       .toBe(true);
   });

@@ -35,6 +35,7 @@
   },
   "dependencies": {
     "debug": "^3.2.6",
+    "dompurify": "^2.0.7",
     "marked": "^0.7.0",
     "yo-yo": "^1.4.1"
   }
