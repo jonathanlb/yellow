@@ -27,7 +27,7 @@ module.exports = class Server {
     const userId = parseInt(request.params.user, 10);
     try {
       const credentials = {
-        id: userId,
+        userId,
         session: secret,
       };
       const sessionOK = await this.auth.authenticateSession(credentials);
@@ -35,7 +35,7 @@ module.exports = class Server {
         return f();
       }
     } catch (e) {
-      errors('checkSecret session', e.message);
+      errors('checkSecret session', e);
       response.status(440).send('Session expired');
       return false;
     }
