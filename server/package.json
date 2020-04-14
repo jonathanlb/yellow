@@ -20,12 +20,12 @@
   },
   "homepage": "https://github.com/jonathanlb/yellow#readme",
   "dependencies": {
-    "bcrypt": "^3.0.3",
+    "bcrypt": "^4.0.1",
     "debug": "^3.2.6",
     "express": "^4.16.4",
     "pg-promise": "^8.5.4",
     "simple-auth": "git://github.com/jonathanlb/simple-auth#v1.2.0",
-    "sqlite3": "^4.0.4",
+    "sqlite3": "^4.1.1",
     "sqlite3-promise": "git://github.com/jonathanlb/node-sqlite3-promise.git#v2.0.0"
   },
   "devDependencies": {
