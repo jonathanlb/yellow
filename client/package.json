@@ -34,9 +34,9 @@
     "webpack-cli": "^3.2.1"
   },
   "dependencies": {
-    "debug": "^3.2.6",
-    "dompurify": "^2.0.7",
-    "marked": "^0.7.0",
+    "debug": "^4.1.1",
+    "dompurify": "^2.0.8",
+    "marked": "^0.8.2",
     "yo-yo": "^1.4.1"
   }
 }
