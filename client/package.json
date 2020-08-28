@@ -26,12 +26,12 @@
     "eslint-plugin-import": "^2.14.0",
     "eslint-plugin-jsx-a11y": "^6.1.2",
     "eslint-plugin-react": "^7.12.3",
-    "jest-cli": "^24.9.0",
+    "jest-cli": "^25.3.0",
     "jest-expect-message": "^1.0.2",
     "jest-fetch-mock": "^1.7.5",
     "shelljs": "^0.8.3",
-    "webpack": "^4.28.1",
-    "webpack-cli": "^3.2.1"
+    "webpack": "^4.42.1",
+    "webpack-cli": "^3.3.11"
   },
   "dependencies": {
     "debug": "^4.1.1",
