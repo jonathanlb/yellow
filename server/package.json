@@ -23,6 +23,7 @@
     "bcrypt": "^5.0.0",
     "debug": "^3.2.6",
     "express": "^4.16.4",
+    "express-rate-limit": "^5.4.1",
     "pg-promise": "^8.5.4",
     "simple-auth": "git://github.com/jonathanlb/simple-auth#v1.2.3",
     "sqlite3": "^4.1.1",

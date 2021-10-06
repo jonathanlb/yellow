@@ -1,4 +1,5 @@
 const express = require('express');
+const rateLimit = require('express-rate-limit');
 const debug = require('debug')('index');
 const config = require('./config');
 const Server = require('./server');
@@ -16,6 +17,12 @@ router.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
   next();
 });
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100,
+});
+router.use(limiter);
 
 authPromise.then(auth => new Server(router, repo, auth))
   .then(server => server.setup())
