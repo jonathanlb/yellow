@@ -1,6 +1,10 @@
 # Yellow Notes
 Yellow Notes is a bulletin board for sharing memos among small groups.  It's bundled into an ECMAScript [client front end](client/README.md) to be served by a vanilla web server and a NodeJS [server](server/README.md) serving as access to a [SQLite database](https://sqlite.org).
 
+This project has been split into two:
+- The server [go-notes](https://github.com/jonathanlb/go-notes) has been rewritten in Go with support for document indexing behind search.
+- The client [yellow-notes](https://github.com/jonathanlb/yellow-notes) has been ported to Typescript and React.
+
 ## Installation
 ```bash
 PYTHON_VERSION=$(python --version 2>&1 | grep -o '[0-9]\.[0-9]')
